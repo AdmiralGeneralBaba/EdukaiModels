@@ -47,8 +47,7 @@ class GeneralAiModels :
         def smart_gpt(self): 
             return self.gptAgent.dera_process()
     class InfoExtractorV1 : 
-        path = "C:\\Users\\david\\Desktop\\Edukai\\AI models\\Info extractor\\meetingminutes.pdf"
-        listPrompt = "list all of the facts in this piece of text. Make sure to include ALL raw information, and nothing more."
+        
         gptAgent = AiOfficalModels.OpenAI
         def chunker(self, path) :
             pdfFileObj = open(path, 'rb')
@@ -81,22 +80,23 @@ class GeneralAiModels :
         # Reads a pdf, inputs them into chunks into GPT-3.5, then returns the raw facts from the file. 
         def info_extractor(self, input_prompt, textbook_path): 
             rawFacts = []
-            textbookChuncked = self.chunker(textbookPath)    
+            textbookChuncked = self.chunker(textbook_path)    
             for i in range(len(textbookChuncked)) : 
                 rawFacts.append(self.gptAgent.open_ai_gpt_call(textbookChuncked[i]))  # Changed here
 
             return rawFacts
     class SentenceIdentifier : 
-        alphabets= "([A-Za-z])"
-        prefixes = "(Mr|St|Mrs|Ms|Dr)[.]"
-        suffixes = "(Inc|Ltd|Jr|Sr|Co)"
-        starters = "(Mr|Mrs|Ms|Dr|Prof|Capt|Cpt|Lt|He\s|She\s|It\s|They\s|Their\s|Our\s|We\s|But\s|However\s|That\s|This\s|Wherever)"
-        acronyms = "([A-Z][.][A-Z][.](?:[A-Z][.])?)"
-        websites = "[.](com|net|org|io|gov|edu|me)"
-        digits = "([0-9])"
-        multiple_dots = r'\.{2,}'
-
+       
         def split_into_sentences(text: str) -> list[str]:
+            alphabets= "([A-Za-z])"
+            prefixes = "(Mr|St|Mrs|Ms|Dr)[.]"
+            suffixes = "(Inc|Ltd|Jr|Sr|Co)"
+            starters = "(Mr|Mrs|Ms|Dr|Prof|Capt|Cpt|Lt|He\s|She\s|It\s|They\s|Their\s|Our\s|We\s|But\s|However\s|That\s|This\s|Wherever)"
+            acronyms = "([A-Z][.][A-Z][.](?:[A-Z][.])?)"
+            websites = "[.](com|net|org|io|gov|edu|me)"
+            digits = "([0-9])"
+            multiple_dots = r'\.{2,}'
+
             """
             Split the text into sentences.
 
@@ -135,8 +135,11 @@ class GeneralAiModels :
             sentences = [s.strip() for s in sentences]
             if sentences and not sentences[-1]: sentences = sentences[:-1]
             return sentences
+path = "C:\\Users\\david\\Desktop\\Edukai\\AI models\\Info extractor\\meetingminutes.pdf"
+listPrompt = "list all of the facts in this piece of text. Make sure to include ALL raw information, and nothing more."
+infoExtractorTest = GeneralAiModels().InfoExtractorV1().info_extractor(listPrompt, path)
 
-
+print(infoExtractorTest)
 
 class FlashcardModels : 
     class FlashcardModelV1 : 
@@ -153,5 +156,7 @@ class FlashcardModels :
             for i in range(len(answerArray)) :
                 questionsArray.append(gptAgent.open_ai_gpt_call(answerArray[i], questionPrompt))   
             return questionsArray, answerArray
+        
+
 
             
