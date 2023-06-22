@@ -8,7 +8,6 @@ class AiOfficalModels :
     class OpenAI : 
         def __init__(self):
             openai.api_key = os.getenv('OPENAI_API_KEY') 
-       
         def open_ai_gpt_call(self, user_content, prompt=None): 
                 messages = [{"role": "user", "content": user_content}]
                 if prompt:
@@ -22,8 +21,7 @@ class AiOfficalModels :
                 reply_content = completion.choices[0].message.content
 
                 return reply_content  # Returning the reply_content from the function7
-        
-    
+
 class GeneralAiModels : 
     class SmartGPTV1 : 
         chain_of_thought_prompt = " Answer : Let’s work this out in a step by step way to be sure we have the right answer"
@@ -79,19 +77,39 @@ class GeneralAiModels :
                 chunks.append(' '.join(current_chunk))
 
             return chunks
+        
+        def chunkerStringArray(self, string_array):
+            chunks = []
+            current_chunk = []
 
+            for word in string_array:
+                # Check if adding this word would make the chunk longer than 3000 characters
+                if len(' '.join(current_chunk + [word])) > 3000:
+                    # If so, add the current chunk to the list of chunks and start a new chunk
+                    chunks.append(' '.join(current_chunk))
+                    current_chunk = []
+
+                # Add the word to the current chunk
+                current_chunk.append(word)
+
+            # Add the last chunk if it's not empty
+            if current_chunk:
+                chunks.append(' '.join(current_chunk))
+
+            return chunks
 
        
         # Reads a pdf, inputs them into chunks into GPT-3.5, then returns the raw facts from the file. 
-        def info_extractor(self, input_prompt, textbook_path): 
+        def info_extractor(self, textbook_path): 
+            listPrompt = "list all of the facts in this piece of text. Make sure to include ALL raw information, and nothing more."
+
             rawFacts = []
             textbookChuncked = self.chunker(textbook_path)    
             for i in range(len(textbookChuncked)) : 
-                rawFacts.append(self.gptAgent.open_ai_gpt_call(textbookChuncked[i]))  # Changed here
+                rawFacts.append(self.gptAgent.open_ai_gpt_call(textbookChuncked[i], listPrompt))  # Changed here
 
             return rawFacts
     class SentenceIdentifier : 
-       
         def split_into_sentences(self, text: str) -> list[str]:
             alphabets= "([A-Za-z])"
             prefixes = "(Mr|St|Mrs|Ms|Dr)[.]"
@@ -141,20 +159,12 @@ class GeneralAiModels :
             if sentences and not sentences[-1]: sentences = sentences[:-1]
             return sentences
 
-path = "C:\\Users\\david\\Desktop\\Edukai\\AI models\\Info extractor\\meetingminutes.pdf"
-listPrompt = "list all of the facts in this piece of text. Make sure to include ALL raw information, and nothing more."
-questionPrompt = "Write a me a tailored question for the following raw fact for a flashcard."
-# infoExtractorTest = GeneralAiModels().InfoExtractorV1().info_extractor(listPrompt, path)
-
-# print(infoExtractorTest)
-
 class FlashcardModels : 
     class FlashcardModelV1 : 
         def __init__(self):
             self.gptAgent = AiOfficalModels.OpenAI()
             self.InfoExtraction = GeneralAiModels.InfoExtractorV1()
             self.SentenceIdentifier = GeneralAiModels.SentenceIdentifier()
-
         def flashcard_intialise(self, infoExtractPrompt, questionPrompt, textbook_path):
             rawInfo = self.InfoExtraction.info_extractor(infoExtractPrompt, textbook_path) #creates the raw information
             answerArray = [sentence for chunk in rawInfo for sentence in self.SentenceIdentifier.split_into_sentences(chunk)]  # <-- change this line
@@ -164,13 +174,49 @@ class FlashcardModels :
                 questionsArray.append(self.gptAgent.open_ai_gpt_call(answer, questionPrompt))   
             return questionsArray, answerArray
 
-flashcardTest = FlashcardModels.FlashcardModelV1()
-questionsArray, answerArray = flashcardTest.flashcard_intialise(listPrompt, questionPrompt, path)
+class yearlyPlanProcess : 
+    class yearlyPlanCreator : 
+        def yearly_plan_facts_per_lesson(self, lessonNumber, path) : 
+            chunkedFacts = []
+            lessonPlansFacts = []
 
-for i in range(len(questionsArray)):
-    print(f"Q{i+1}: {questionsArray[i]}\nA{i+1}: {answerArray[i]}\n")
+            gptAgent = AiOfficalModels.OpenAI()
+            InfoExtractor = GeneralAiModels.InfoExtractorV1() # Creates a infoExtractor object
+            rawTextbookFacts = InfoExtractor.info_extractor(path) # Extracts the raw facts from a PDF into a String array
+            chunkedFacts = InfoExtractor.chunkerStringArray(rawTextbookFacts) #Splits a String array into chunks of less than 3000 characters
 
+            lessonNumber = lessonNumber // len(chunkedFacts)
 
-
+            factForLessonPrompt = f"""Based on these facts, I want you to section off them so that they are split up into {lessonNumber} lessons. 
+                                    Don't change the facts; put them into {lessonNumber} chunks, with starting before them their lesson number, 
+                                    e.g LESSON 1, LESSON 2, and LESSON 3, up to lesson {lessonNumber} and have it be so that the information 
+                                    is grouped in the most logical way."""
+            for i in range(len(chunkedFacts)) : 
+                lessonPlansFacts.append(gptAgent.open_ai_gpt_call(chunkedFacts[i], factForLessonPrompt))
+            return lessonPlansFacts
+        
+        def yearly_plan_powerpoint_creator(self, lessonPlanFacts) :
+            lessonPlans = []
+            powerpointCreatorPrompt = """Make me a lesson plan based on the following raw facts. I want it to be in a powerpoint slide, such that for each slide, you input 
+                                         [SLIDE {i}], and then have a space, with the powerpoint plan afterwards, with all of the information to be included in the powerpoint. 
+                                         Here is the information to make into a powerpoint lesson; remember to use ONLY the information here, to ensure accuracy: """
+            gptAgent = AiOfficalModels.OpenAI()
+            for i in range(len(lessonPlanFacts)) : 
+                lessonPlans.append(gptAgent.open_ai_gpt_call(lessonPlanFacts[i], powerpointCreatorPrompt))
 
             
+            return lessonPlans
+        def yearly_plan_final(self, lessonNumber, path) : 
+            lessonPlanFacts = self.yearly_plan_facts_per_lesson(lessonNumber, path)
+            finalLessonStructure = self.yearly_plan_powerpoint_creator(lessonPlanFacts)
+            return finalLessonStructure
+    
+########################################################################  TESTING CODE ###########################################################
+
+
+path = "C:\\Users\\david\\Desktop\\Edukai\\AI models\\Info extractor\\meetingminutes.pdf"
+listPrompt = "list all of the facts in this piece of text. Make sure to include ALL raw information, and nothing more."
+questionPrompt = "Write a me a tailored question for the following raw fact for a flashcard."
+
+test = yearlyPlanProcess.yearlyPlanCreator()
+print (test.yearly_plan_final(15, path))
