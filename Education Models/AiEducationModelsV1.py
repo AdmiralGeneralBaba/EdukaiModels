@@ -9,6 +9,23 @@ class AiOfficalModels :
         def __init__(self):
             openai.api_key = os.getenv('OPENAI_API_KEY') 
         def open_ai_gpt_call(self, user_content, prompt=None): 
+            if isinstance(user_content, list):  # checks if user_content is a list
+                messages = user_content
+                if prompt:
+                    messages.insert(0, {"role":"system", "content": prompt})
+            else:
+                messages = [{"role": "user", "content": user_content}]
+                if prompt:
+                    messages.insert(0, {"role":"system", "content": prompt})
+
+            completion  = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=messages
+            )
+
+            reply_content = completion.choices[0].message.content
+            return reply_content  # Returning the reply_content from the function
+        def open_ai_gpt4_call(self, user_content, prompt=None) : 
                 messages = [{"role": "user", "content": user_content}]
                 if prompt:
                     messages.insert(0, {"role":"system", "content": prompt})
@@ -27,9 +44,7 @@ class GeneralAiModels :
         chain_of_thought_prompt = " Answer : Let’s work this out in a step by step way to be sure we have the right answer"
         reflexion_prompt = "You are a researcher tasked with investigating the the 3 response options provided. List the flaws and faulty logic of each answer option. Let's work this out in a step by step way to be sure we have all the errors: "
         dera_prompt = " You are a resolver tasked with 1) finding which of the X answer options the researcher thought was best 2) improving that answer and 4) Printing the improved answer in full. Let's work this out in a step by step way to be sure we have the right answer: "
-        
         gptAgent = AiOfficalModels.OpenAI
-
         def chain_of_thought(self):
             combined_output = ""
             user_input = input(">: ")   # Asking for user outside the loop
@@ -38,20 +53,15 @@ class GeneralAiModels :
                 combined_output += reply_content + "\n"  # Adding reply_content to combinedOutput
 
             return combined_output  # Printing combinedOutput after all iterations
-
         def reflexion_process(self): 
             return self.gptAgent.open_ai_gpt_call(self.chain_of_thought(), self.reflexion_prompt)
-
         def dera_process(self):
             return self.gptAgent.open_ai_gpt_call(self.reflexion_process(), self.dera_prompt)
-
         def smart_gpt(self): 
             return self.gptAgent.dera_process()
-    class InfoExtractorV1 : 
-        
+    class InfoExtractorV1 :        
         def __init__(self):
-           self.gptAgent = AiOfficalModels.OpenAI()
-           
+           self.gptAgent = AiOfficalModels.OpenAI()          
         def chunker(self, path) :
             pdfFileObj = open(path, 'rb')
             pdfReader = PyPDF2.PdfReader(pdfFileObj)  # Use PdfReader instead of PdfFileReader
@@ -97,8 +107,6 @@ class GeneralAiModels :
                 chunks.append(' '.join(current_chunk))
 
             return chunks
-
-       
         # Reads a pdf, inputs them into chunks into GPT-3.5, then returns the raw facts from the file. 
         def info_extractor(self, textbook_path): 
             listPrompt = "list all of the facts in this piece of text. Make sure to include ALL raw information, and nothing more."
@@ -158,6 +166,7 @@ class GeneralAiModels :
             sentences = [s.strip() for s in sentences]
             if sentences and not sentences[-1]: sentences = sentences[:-1]
             return sentences
+    
 
 class FlashcardModels : 
     class FlashcardModelV1 : 
@@ -184,7 +193,6 @@ class yearlyPlanProcess :
             parts = ["LESSON " + parts[i+1] + parts[i + 2] for i in range(0, len(parts), 3)]
             
             return parts
-
         def yearly_plan_facts_per_lesson(self, lessonNumber, path) : 
             chunkedFacts = []
             lessonPlansFacts = []
@@ -205,8 +213,7 @@ class yearlyPlanProcess :
             for i in range(len(chunkedFacts)) : 
                 lessonPlansFacts.append(gptAgent.open_ai_gpt_call(chunkedFacts[i], factForLessonPrompt))
                 lessonPlanFactsFinal = self.split_string(lessonPlansFacts[i])
-            return lessonPlanFactsFinal
-        
+            return lessonPlanFactsFinal      
         def yearly_plan_powerpoint_creator(self, lessonPlanFacts) :
             lessonPlans = []
             powerpointCreatorPrompt = """Make me a powerpoint plan based on the following raw facts for a lesson. I want it to be in a powerpoint slide, such that for each slide, you input 
@@ -231,7 +238,48 @@ class yearlyPlanProcess :
             lessonPlanFacts = self.yearly_plan_facts_per_lesson(lessonNumber, path)
             finalLessonStructure = self.yearly_plan_powerpoint_creator(lessonPlanFacts)
             return finalLessonStructure
-    
+
+class tutorAiModels :
+    class TutorAIV1:
+        
+        def __init__(self):
+            self.chat_history = [{"role": "system", "content": "You are an AI tutor."}]
+            self.gpt_initialise = AiOfficalModels.OpenAI()
+        def get_difficulty(self, request):
+            difficultyDeterminePrompt = """Based on the user's prompt, determine it's difficulty in answering. return ONLY one of the three, based on how hard it is to answer: 
+                                     "EASY", "MEDUIM", "HARD" """ 
+            self.chat_history.append({"role": "user", "content": request})
+            return self.gpt_initialise.open_ai_gpt_call(self.chat_history, difficultyDeterminePrompt)
+        def get_responseGpt3(self, request):
+            return self.gpt_initialise.open_ai_gpt_call(self.chat_history, request)
+        def tutor_ai_initialise(self): 
+            while True:  # start an infinite loop
+                current_request = input("\nPlease enter your request (or type 'quit' to exit): ")
+                
+                # If user types 'quit', break the loop
+                if current_request.lower() == 'quit':
+                    break
+
+                difficulty = self.get_difficulty(current_request)
+                print(difficulty)
+                if re.match(r'^EASY', difficulty):
+                    print("This is an EASY question")
+                    self.get_responseGpt3(current_request)
+                elif re.match(r'^MEDIUM', difficulty): 
+                    print("This is a MEDIUM question")
+                    print("GPT answer here")
+                elif re.match(r'^HARD', difficulty): 
+                    print("This is a HARD question")
+                    print("SmartGPT response here") 
+                else:
+                    print("Error in difficulty determination.")
+                    continue  # Skip to the next iteration
+
+                
+
+
+
+
 ########################################################################  TESTING CODE ###########################################################
 
 
@@ -240,12 +288,12 @@ listPrompt = "list all of the facts in this piece of text. Make sure to include 
 questionPrompt = "Write a me a tailored question for the following raw fact for a flashcard."
 school = "Primary School"
 test = yearlyPlanProcess.yearlyPlanCreator()
-lessonisedFacts = test.yearly_plan_facts_per_lesson(2, path)
-powerpoints = test.yearly_plan_powerpoint_creator(lessonisedFacts)
-homework = test.yearly_plan_homework_creator(lessonisedFacts, school)
-print(lessonisedFacts[0])
-print(powerpoints[0])
-print(homework[0])
-
+#lessonisedFacts = test.yearly_plan_facts_per_lesson(2, path)
+#powerpoints = test.yearly_plan_powerpoint_creator(lessonisedFacts)
+#homework = test.yearly_plan_homework_creator(lessonisedFacts, school)
+#print(lessonisedFacts[0])
+#print(powerpoints[0])
+#print(homework[0])
+tutorAitest = tutorAiModels.TutorAIV1().tutor_ai_initialise()
 
 
