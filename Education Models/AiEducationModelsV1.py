@@ -176,10 +176,18 @@ class FlashcardModels :
 
 class yearlyPlanProcess : 
     class yearlyPlanCreator : 
+        def split_string(self, s):
+            # split the string, but keep the delimiter
+            parts = re.split("(#_!LESSON \d<@~)", s)[1:]
+            
+            # group parts in pairs (a pair is a delimiter and the part after it)
+            parts = [parts[i] + parts[i + 1] for i in range(0, len(parts), 2)]
+            
+            return parts
         def yearly_plan_facts_per_lesson(self, lessonNumber, path) : 
             chunkedFacts = []
             lessonPlansFacts = []
-
+            lessonPlanFactsFinal = []
             gptAgent = AiOfficalModels.OpenAI()
             InfoExtractor = GeneralAiModels.InfoExtractorV1() # Creates a infoExtractor object
             rawTextbookFacts = InfoExtractor.info_extractor(path) # Extracts the raw facts from a PDF into a String array
@@ -189,11 +197,14 @@ class yearlyPlanProcess :
 
             factForLessonPrompt = f"""Based on these facts, I want you to section off them so that they are split up into {lessonNumber} lessons. 
                                     Don't change the facts; put them into {lessonNumber} chunks, with starting before them their lesson number, 
-                                    e.g LESSON 1, LESSON 2, and LESSON 3, up to lesson {lessonNumber} and have it be so that the information 
-                                    is grouped in the most logical way."""
+                                    and add these symbols before and after like so: #_!LESSON 1<@~, #_!LESSON 2<@~, and #_!LESSON 3<@~, up to lesson {lessonNumber} and have it be so that the information 
+                                    is grouped in the most logical way. Make sure that ALL facts are inside the lessons, such that there are none
+                                    left over. Do not change, or add anything about the facts; copy and paste them, into each respective lesson, from the
+                                    list you have been given. Here are the facts: """
             for i in range(len(chunkedFacts)) : 
                 lessonPlansFacts.append(gptAgent.open_ai_gpt_call(chunkedFacts[i], factForLessonPrompt))
-            return lessonPlansFacts
+                lessonPlanFactsFinal = self.split_string(lessonPlansFacts[i])
+            return lessonPlanFactsFinal
         
         def yearly_plan_powerpoint_creator(self, lessonPlanFacts) :
             lessonPlans = []
@@ -219,4 +230,6 @@ listPrompt = "list all of the facts in this piece of text. Make sure to include 
 questionPrompt = "Write a me a tailored question for the following raw fact for a flashcard."
 
 test = yearlyPlanProcess.yearlyPlanCreator()
-print (test.yearly_plan_final(15, path))
+output = test.yearly_plan_facts_per_lesson(5, path)
+print(output[0])
+
