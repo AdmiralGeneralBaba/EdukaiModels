@@ -178,12 +178,13 @@ class yearlyPlanProcess :
     class yearlyPlanCreator : 
         def split_string(self, s):
             # split the string, but keep the delimiter
-            parts = re.split("(#_!LESSON \d<@~)", s)[1:]
+            parts = re.split("(#_!LESSON (\d)<@~)", s)[1:]
             
             # group parts in pairs (a pair is a delimiter and the part after it)
-            parts = [parts[i] + parts[i + 1] for i in range(0, len(parts), 2)]
+            parts = ["LESSON " + parts[i+1] + parts[i + 2] for i in range(0, len(parts), 3)]
             
             return parts
+
         def yearly_plan_facts_per_lesson(self, lessonNumber, path) : 
             chunkedFacts = []
             lessonPlansFacts = []
@@ -208,7 +209,7 @@ class yearlyPlanProcess :
         
         def yearly_plan_powerpoint_creator(self, lessonPlanFacts) :
             lessonPlans = []
-            powerpointCreatorPrompt = """Make me a lesson plan based on the following raw facts. I want it to be in a powerpoint slide, such that for each slide, you input 
+            powerpointCreatorPrompt = """Make me a powerpoint plan based on the following raw facts for a lesson. I want it to be in a powerpoint slide, such that for each slide, you input 
                                          [SLIDE {i}], and then have a space, with the powerpoint plan afterwards, with all of the information to be included in the powerpoint. 
                                          Here is the information to make into a powerpoint lesson; remember to use ONLY the information here, to ensure accuracy: """
             gptAgent = AiOfficalModels.OpenAI()
@@ -217,6 +218,15 @@ class yearlyPlanProcess :
 
             
             return lessonPlans
+        def yearly_plan_homework_creator(self, lessons, schoolType) :
+            homeworkContent = [] 
+            homeworkPrompt = f"""Pretend you are a teacher for a {schoolType}. Based on the following powerpoint slides, create a homework plan for students to compelete.
+                                Remember to only test based on the information provided: """
+            gptAgent = AiOfficalModels.OpenAI()
+            for i in range(len(lessons)) : 
+                homeworkContent.append(gptAgent.open_ai_gpt_call(lessons[i], homeworkPrompt))
+
+            return homeworkContent
         def yearly_plan_final(self, lessonNumber, path) : 
             lessonPlanFacts = self.yearly_plan_facts_per_lesson(lessonNumber, path)
             finalLessonStructure = self.yearly_plan_powerpoint_creator(lessonPlanFacts)
@@ -230,6 +240,10 @@ listPrompt = "list all of the facts in this piece of text. Make sure to include 
 questionPrompt = "Write a me a tailored question for the following raw fact for a flashcard."
 
 test = yearlyPlanProcess.yearlyPlanCreator()
-output = test.yearly_plan_facts_per_lesson(5, path)
-print(output[0])
+lessonisedFacts = test.yearly_plan_facts_per_lesson(2, path)
+powerpoints = test.yearly_plan_powerpoint_creator(lessonisedFacts)
+print
+print(lessonisedFacts)
+print(powerpoints[0])
+
 
