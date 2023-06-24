@@ -238,12 +238,14 @@ class yearlyPlanProcess :
 path = "C:\\Users\\david\\Desktop\\Edukai\\AI models\\Info extractor\\meetingminutes.pdf"
 listPrompt = "list all of the facts in this piece of text. Make sure to include ALL raw information, and nothing more."
 questionPrompt = "Write a me a tailored question for the following raw fact for a flashcard."
-
+school = "Primary School"
 test = yearlyPlanProcess.yearlyPlanCreator()
 lessonisedFacts = test.yearly_plan_facts_per_lesson(2, path)
 powerpoints = test.yearly_plan_powerpoint_creator(lessonisedFacts)
-print
-print(lessonisedFacts)
+homework = test.yearly_plan_homework_creator(lessonisedFacts, school)
+print(lessonisedFacts[0])
 print(powerpoints[0])
+print(homework[0])
+
 
 
