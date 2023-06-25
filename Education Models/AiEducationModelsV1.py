@@ -241,20 +241,28 @@ class yearlyPlanProcess :
 
 class tutorAiModels :
     class TutorAIV1:
-        
         def __init__(self):
-            self.chat_history = [{"role": "system", "content": "You are an AI tutor."}]
+            self.chat_history = []
             self.gpt_initialise = AiOfficalModels.OpenAI()
+            self.SmartGPT = GeneralAiModels.SmartGPTV1()
         def get_difficulty(self, request):
             difficultyDeterminePrompt = """Based on the user's prompt, determine it's difficulty in answering. return ONLY one of the three, based on how hard it is to answer: 
                                      "EASY", "MEDUIM", "HARD" """ 
-            self.chat_history.append({"role": "user", "content": request})
-            return self.gpt_initialise.open_ai_gpt_call(self.chat_history, difficultyDeterminePrompt)
+            
+            return self.gpt_initialise.open_ai_gpt_call(request, difficultyDeterminePrompt)
         def get_responseGpt3(self, request):
-            return self.gpt_initialise.open_ai_gpt_call(self.chat_history, request)
+            gpt3Prompt = ""
+            return self.gpt_initialise.open_ai_gpt_call(request, gpt3Prompt)
+        def get_responseGpt4(self, request) : 
+            gpt4Prompt = ""
+            return self.gpt_initialise.open_ai_gpt4_call(request, gpt4Prompt)
+        def get_smartResponseGpt4(self, request) : 
+            SmartGPTPrompt = ""
+            return self.SmartGPT.smart_gpt(request)
         def tutor_ai_initialise(self): 
             while True:  # start an infinite loop
                 current_request = input("\nPlease enter your request (or type 'quit' to exit): ")
+                
                 
                 # If user types 'quit', break the loop
                 if current_request.lower() == 'quit':
@@ -274,10 +282,11 @@ class tutorAiModels :
                 else:
                     print("Error in difficulty determination.")
                     continue  # Skip to the next iteration
-
-                
-
-
+#Questions to improve tutorAI: 
+# 1. How good is GPT-3.5 at be able to identify how hard/easy a question is? If not, how good will GPT-4 and SmartGPT be at this? 
+# 2. How can I implement function calls to be able to improve the validity of the answer, and for which domians would this be needed?
+# 3. Can I implmenet chat history for the 'get difficulty' section, and have it perform function calls for the difficulty levels, to bypass it's changing responses?
+# 4. How does the temperature setting chances effect the model, to allow it to stay within the prompt's directions ?
 
 
 ########################################################################  TESTING CODE ###########################################################
