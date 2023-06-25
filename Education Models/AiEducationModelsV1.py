@@ -272,13 +272,15 @@ class tutorAiModels :
                 print(difficulty)
                 if re.match(r'^EASY', difficulty):
                     print("This is an EASY question")
-                    self.get_responseGpt3(current_request)
+                    print(self.get_responseGpt3(current_request))
                 elif re.match(r'^MEDIUM', difficulty): 
                     print("This is a MEDIUM question")
                     print("GPT answer here")
+                    print(self.get_responseGpt3(current_request))
                 elif re.match(r'^HARD', difficulty): 
                     print("This is a HARD question")
                     print("SmartGPT response here") 
+                    print(self.get_responseGpt3(current_request))
                 else:
                     print("Error in difficulty determination.")
                     continue  # Skip to the next iteration
