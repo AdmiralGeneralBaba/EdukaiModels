@@ -289,7 +289,7 @@ class tutorAiModels :
 # 2. How can I implement function calls to be able to improve the validity of the answer, and for which domians would this be needed?
 # 3. Can I implmenet chat history for the 'get difficulty' section, and have it perform function calls for the difficulty levels, to bypass it's changing responses?
 # 4. How does the temperature setting chances effect the model, to allow it to stay within the prompt's directions ?
-
+# 5. Test out the midjourneyAPI and see how good it is as an API.
 
 ########################################################################  TESTING CODE ###########################################################
 
@@ -305,6 +305,6 @@ test = yearlyPlanProcess.yearlyPlanCreator()
 #print(lessonisedFacts[0])
 #print(powerpoints[0])
 #print(homework[0])
-tutorAitest = tutorAiModels.TutorAIV1().tutor_ai_initialise()
-
-
+#tutorAitest = tutorAiModels.TutorAIV1().tutor_ai_initialise()
+print(os.getenv("PINECONE_ENV"))
+print(os.getenv("PINECONE_API_KEY"))
