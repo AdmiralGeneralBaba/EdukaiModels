@@ -285,11 +285,11 @@ class tutorAiModels :
                 else:
                     print("Error in difficulty determination.")
                     continue  # Skip to the next iteration
-class examCreatorModels : 
-    class AQAEnglishPaperss : 
+class ExamCreatorModels : 
+    class AQAEnglishPapers : 
         class AQAEnglishLanguagePapers :
             class Paper1 : 
-                class sourceExtractor : 
+                class SourceExtractor : 
                     def get_pdf_content(self, pdf_file):
                         sourceTextRaw = ""
                         with open(pdf_file, 'rb') as pdf_file_obj:
@@ -325,17 +325,41 @@ class examCreatorModels :
                         subsection = text[start_index:end_index]
 
                         return subsection
-                    def sourceExtraction(self, pdf_file) : 
-                        content = self.get_pdf_content(pdf_file)
+                    def source_extraction(self, pdf_file):
+                        if isinstance(pdf_file, str) : 
+                            content = pdf_file
+                        else : 
+                            content = self.get_pdf_content(pdf_file)
                         startAndEndLines = self.start_and_end_lines(content)
-                        sourceExtract = self.extract_subsection(content, startAndEndLines[0], startAndEndLines[1]) 
+                        sourceExtract = self.extract_subsection(content, startAndEndLines[0], startAndEndLines[1])
 
-                        return sourceExtract
-            
+                class Question1 : 
+                    def character_selection(self, sourceExtract) : 
+                        quesOnePrompt = ""
+                        gptAgent = AiOfficalModels.OpenAI
+                        significantCharcter = gptAgent.open_ai_gpt_call(sourceExtract, quesOnePrompt)
+                        quesOneStringStructure = f"List four things about {significantCharcter} from this part of the source."
+                        
+                        return quesOneStringStructure
+                    def setting_selection(self, sourceExtract) : 
+                        return 
+                    def final_model(self, sourceExtract, choice) : 
+                        if choice == 0 : 
+                            question = self.characterSelection(sourceExtract)
+                            return question
+                        else : 
+                            question = self.settingSelection(sourceExtract)
+                            return question
+                class Question2 :  
+                    def subsection_source(self, sourceExtract) : 
+                       self.Source
+
+
+                        
 
 
 
-            
+
 #Questions to improve tutorAI: 
 # 1. How good is GPT-3.5 at be able to identify how hard/easy a question is? If not, how good will GPT-4 and SmartGPT be at this? 
 # 2. How can I implement function calls to be able to improve the validity of the answer, and for which domians would this be needed?
