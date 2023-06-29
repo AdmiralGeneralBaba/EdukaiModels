@@ -2,6 +2,7 @@ import PyPDF2
 import os
 import openai
 import re
+import random
 
 
 class AiOfficalModels :
@@ -284,6 +285,57 @@ class tutorAiModels :
                 else:
                     print("Error in difficulty determination.")
                     continue  # Skip to the next iteration
+class examCreatorModels : 
+    class AQAEnglishPaperss : 
+        class AQAEnglishLanguagePapers :
+            class Paper1 : 
+                class sourceExtractor : 
+                    def get_pdf_content(self, pdf_file):
+                        sourceTextRaw = ""
+                        with open(pdf_file, 'rb') as pdf_file_obj:
+                            pdf_reader = PyPDF2.PdfFileReader(pdf_file_obj)
+                            numpages =  pdf_reader.getNumPages()
+
+                            random_number = random.randint(5, numpages - 5)
+                            
+                            for i in range(random_number-1, random_number+1) : 
+                                page_obj = pdf_reader.getPage(i)
+                                sourceTextRaw = sourceTextRaw + page_obj.extract_text()
+                        
+                        return sourceTextRaw
+                    def start_and_end_lines(self, content) : 
+                        regexExpression = r'"(.*?)"'
+                        sourceExtractionPrompt = ""
+                        gptAgent = AiOfficalModels.OpenAI
+                        beginningAndEndingLines = gptAgent.open_ai_gpt_call(content, sourceExtractionPrompt) #Calls GPT-3.5, creates the first and last line of the content extracted
+                        beginningAndEndingLines  = beginningAndEndingLines.replace("\n", " ") # Takes away any line breaks
+                        beginningAndEndingLines = re.findall(regexExpression, beginningAndEndingLines) #Seperates the result into two strings. [0] = start, [1] = last.
+                        return beginningAndEndingLines
+                    def extract_subsection(self, text, start_sentence, end_sentence):
+                        start_index = text.find(start_sentence)
+                        end_index = text.find(end_sentence)
+
+                        if start_index == -1 or end_index == -1:
+                            return "Start or end sentence not found in the text."
+                        
+                        # Adjust the indices to include the end sentence
+                        end_index += len(end_sentence)
+
+                        # Extract the subsection
+                        subsection = text[start_index:end_index]
+
+                        return subsection
+                    def sourceExtraction(self, pdf_file) : 
+                        content = self.get_pdf_content(pdf_file)
+                        startAndEndLines = self.start_and_end_lines(content)
+                        sourceExtract = self.extract_subsection(content, startAndEndLines[0], startAndEndLines[1]) 
+
+                        return sourceExtract
+            
+
+
+
+            
 #Questions to improve tutorAI: 
 # 1. How good is GPT-3.5 at be able to identify how hard/easy a question is? If not, how good will GPT-4 and SmartGPT be at this? 
 # 2. How can I implement function calls to be able to improve the validity of the answer, and for which domians would this be needed?
@@ -298,7 +350,7 @@ path = "C:\\Users\\david\\Desktop\\Edukai\\AI models\\Info extractor\\meetingmin
 listPrompt = "list all of the facts in this piece of text. Make sure to include ALL raw information, and nothing more."
 questionPrompt = "Write a me a tailored question for the following raw fact for a flashcard."
 school = "Primary School"
-test = yearlyPlanProcess.yearlyPlanCreator()
+# test = yearlyPlanProcess.yearlyPlanCreator()
 #lessonisedFacts = test.yearly_plan_facts_per_lesson(2, path)
 #powerpoints = test.yearly_plan_powerpoint_creator(lessonisedFacts)
 #homework = test.yearly_plan_homework_creator(lessonisedFacts, school)
@@ -306,5 +358,5 @@ test = yearlyPlanProcess.yearlyPlanCreator()
 #print(powerpoints[0])
 #print(homework[0])
 #tutorAitest = tutorAiModels.TutorAIV1().tutor_ai_initialise()
-print(os.getenv("PINECONE_ENV"))
-print(os.getenv("PINECONE_API_KEY"))
+# print(os.getenv("PINECONE_ENV"))
+# print(os.getenv("PINECONE_API_KEY"))
