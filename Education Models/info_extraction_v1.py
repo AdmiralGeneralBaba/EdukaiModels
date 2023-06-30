@@ -1,9 +1,10 @@
-
-
+import pypdf
+from openai_calls import OpenAI
+import PyPDF2
 
 class InfoExtractorV1 :        
         def __init__(self):
-           self.gptAgent = AiOfficalModels.OpenAI()          
+           self.gptAgent = OpenAI()          
         def chunker(self, path) :
             pdfFileObj = open(path, 'rb')
             pdfReader = PyPDF2.PdfReader(pdfFileObj)  # Use PdfReader instead of PdfFileReader
