@@ -1,4 +1,6 @@
-
+from openai_calls import OpenAI 
+from info_extraction_v1 import InfoExtractorV1
+import re
 
 
 class yearlyPlanCreator : 
@@ -14,8 +16,8 @@ class yearlyPlanCreator :
         chunkedFacts = []
         lessonPlansFacts = []
         lessonPlanFactsFinal = []
-        gptAgent = AiOfficalModels.OpenAI()
-        InfoExtractor = GeneralAiModels.InfoExtractorV1() # Creates a infoExtractor object
+        gptAgent = OpenAI()
+        InfoExtractor = InfoExtractorV1() # Creates a infoExtractor object
         rawTextbookFacts = InfoExtractor.info_extractor(path) # Extracts the raw facts from a PDF into a String array
         chunkedFacts = InfoExtractor.chunkerStringArray(rawTextbookFacts) #Splits a String array into chunks of less than 3000 characters
 
@@ -36,7 +38,7 @@ class yearlyPlanCreator :
         powerpointCreatorPrompt = """Make me a powerpoint plan based on the following raw facts for a lesson. I want it to be in a powerpoint slide, such that for each slide, you input 
                                         [SLIDE {i}], and then have a space, with the powerpoint plan afterwards, with all of the information to be included in the powerpoint. 
                                         Here is the information to make into a powerpoint lesson; remember to use ONLY the information here, to ensure accuracy: """
-        gptAgent = AiOfficalModels.OpenAI()
+        gptAgent = OpenAI()
         for i in range(len(lessonPlanFacts)) : 
             lessonPlans.append(gptAgent.open_ai_gpt_call(lessonPlanFacts[i], powerpointCreatorPrompt))
 
@@ -46,7 +48,7 @@ class yearlyPlanCreator :
         homeworkContent = [] 
         homeworkPrompt = f"""Pretend you are a teacher for a {schoolType}. Based on the following powerpoint slides, create a homework plan for students to compelete.
                             Remember to only test based on the information provided: """
-        gptAgent = AiOfficalModels.OpenAI()
+        gptAgent = OpenAI()
         for i in range(len(lessons)) : 
             homeworkContent.append(gptAgent.open_ai_gpt_call(lessons[i], homeworkPrompt))
 

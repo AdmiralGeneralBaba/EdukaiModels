@@ -1,6 +1,7 @@
-import pypdf
 from openai_calls import OpenAI
 import PyPDF2
+import re
+
 
 class InfoExtractorV1 :        
         def __init__(self):

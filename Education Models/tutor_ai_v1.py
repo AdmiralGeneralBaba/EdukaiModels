@@ -1,8 +1,13 @@
+from openai_calls import OpenAI
+from smart_gpt_v1 import SmartGPTV1
+import re
+
+
 class TutorAIV1:
     def __init__(self):
         self.chat_history = []
-        self.gpt_initialise = AiOfficalModels.OpenAI()
-        self.SmartGPT = GeneralAiModels.SmartGPTV1()
+        self.gpt_initialise = OpenAI()
+        self.SmartGPT = SmartGPTV1()
     def get_difficulty(self, request):
         difficultyDeterminePrompt = """Based on the user's prompt, determine it's difficulty in answering. return ONLY one of the three, based on how hard it is to answer: 
                                     "EASY", "MEDUIM", "HARD" """ 

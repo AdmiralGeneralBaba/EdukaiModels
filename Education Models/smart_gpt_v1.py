@@ -1,10 +1,10 @@
-
+from openai_calls import OpenAI
 
 class SmartGPTV1 : 
     chain_of_thought_prompt = " Answer : Let’s work this out in a step by step way to be sure we have the right answer"
     reflexion_prompt = "You are a researcher tasked with investigating the the 3 response options provided. List the flaws and faulty logic of each answer option. Let's work this out in a step by step way to be sure we have all the errors: "
     dera_prompt = " You are a resolver tasked with 1) finding which of the X answer options the researcher thought was best 2) improving that answer and 4) Printing the improved answer in full. Let's work this out in a step by step way to be sure we have the right answer: "
-    gptAgent = AiOfficalModels.OpenAI
+    gptAgent = OpenAI
     def chain_of_thought(self):
         combined_output = ""
         user_input = input(">: ")   # Asking for user outside the loop
