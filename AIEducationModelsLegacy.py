@@ -352,7 +352,7 @@ class ExamCreatorModels :
                             return question
                 class Question2 :  
                     def subsection_source(self, sourceExtract) : 
-                       self.Source
+                       
 
 
                         
