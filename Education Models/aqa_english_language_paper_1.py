@@ -72,7 +72,7 @@ class Question2 :
                                 with a comma between the two sentences. MAKE SURE the two quotes are BOTH in speech marks. Here is the extract: {sourceExtract}  """
         gptAgent = OpenAI
         twoStrings = gptAgent.open_ai_gpt_call(sourceExtract, subsectionPrompt)
-        source_extractor_instance = Paper1.SourceExtractor()
+        source_extractor_instance = SourceExtractor()
         subsection = source_extractor_instance.extract_subsection(sourceExtract, twoStrings[0], twoStrings[1])
 
         return subsection
