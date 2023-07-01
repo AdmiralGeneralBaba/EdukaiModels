@@ -34,3 +34,11 @@ class OpenAI :
             reply_content = completion.choices[0].message.content
 
             return reply_content  # Returning the reply_content from the function7
+    def open_ai_dalle_call_n1(self, inputPrompt) :
+        response = openai.Image.create(
+            prompt="a white siamese cat",
+            n=1,
+            size="1024x1024"
+        )
+        image_url = response['data'][0]['url']
+        return image_url

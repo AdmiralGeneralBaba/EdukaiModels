@@ -350,9 +350,8 @@ class ExamCreatorModels :
                         else : 
                             question = self.settingSelection(sourceExtract)
                             return question
-                class Question2 :  
-                    def subsection_source(self, sourceExtract) : 
-                       
+               
+                    
 
 
                         

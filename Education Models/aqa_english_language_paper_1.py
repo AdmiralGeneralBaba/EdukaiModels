@@ -184,27 +184,31 @@ class Paper1 :
             gptAgent = OpenAI()
             question4 = gptAgent.open_ai_gpt4_call(extract, question4PromptGPT4)
             return question4
-    class Question5 : 
-        def introduction(self) :
-            introductionPrompt = "" #input prompt from google drive
-            gptAgent = OpenAI()
-            introduction = gptAgent.open_ai_gpt_call(prompt=introductionPrompt)
+    class Question5: 
+        def __init__(self):
+            self.gptAgent = OpenAI()
+
+        def introduction(self):
+            introductionPrompt = "" # input prompt from google drive
+            introduction = self.gptAgent.open_ai_gpt_call(prompt=introductionPrompt)
             return introduction
-            #return introduction
-        def write_a_whatever(self) : 
-            writeAWhateverPrompt = "" #input prompt from google drive
-            gptAgent = OpenAI()
-            writeAWhatever = gptAgent.open_ai_gpt_call(prompt=writeAWhateverPrompt)
-            #return writeAWhatever
-        def describe(self) : 
-            describePrompt = ""#input prompt from google drive
-            gptAgent = OpenAI()
-            describe = gptAgent.open_ai_gpt_call(prompt=describePrompt)
-            #API call to dalle2, with describe as the input prompt.
-            #return describe, + describeImage
+
+        def write_a_whatever(self): 
+            writeAWhateverPrompt = "" # input prompt from google drive
+            writeAWhatever = self.gptAgent.open_ai_gpt_call(prompt=writeAWhateverPrompt)
+            return writeAWhatever
+
+        def describe(self): 
+            describePrompt = "" # input prompt from google drive
+            describe = self.gptAgent.open_ai_gpt_call(prompt=describePrompt)
+            describeImage = self.gptAgent.open_ai_dalle_call_n1(inputPrompt=describe)
+            return describe, describeImage  
 
         def final_model(self) : 
-            #Combine all three into one return for ease of use
-
+            introduction = self.introduction()
+            writeAWhatever = self.write_a_whatever()
+            describe = self.describe()
+            return introduction, writeAWhatever, describe
+            #returns an introduction string, a 'writeAWhatever' string, a 'describe' question string and a URL for a image created by DALLe for the description question
 
             
