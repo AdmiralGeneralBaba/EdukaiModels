@@ -3,7 +3,7 @@ from info_extraction_v1 import InfoExtractorV1
 import re
 
 
-class yearlyPlanCreator : 
+class YearlyPlanCreatorV1 : 
     def split_string(self, s):
         # split the string, but keep the delimiter
         parts = re.split("(#_!LESSON (\d)<@~)", s)[1:]

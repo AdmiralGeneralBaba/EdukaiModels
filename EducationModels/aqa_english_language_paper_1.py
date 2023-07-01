@@ -281,7 +281,7 @@ class Paper1 :
             describe = self.describe()
             return introduction, writeAWhatever, describe
             #returns an introduction string, a 'writeAWhatever' string, a 'describe' question string and a URL for a image created by DALLe for the description question
-def paper_1_generator(self, pdfFile, ques1Choice, titleOfBook, bookType) : 
+def aqa_english_language_paper_1_generator(self, pdfFile, ques1Choice, titleOfBook, bookType) : 
     paper1 = Paper1()
     source, pageNumber, numpages = paper1.SourceExtractor.source_extraction(pdfFile) # Creates the extract 
     question1 = paper1.Question1.final_model(source, ques1Choice) # Creates question 1 
