@@ -23,7 +23,7 @@ class SourceExtractor :
     def start_and_end_lines(self, content) : 
         regexExpression = r'"(.*?)"'
         sourceExtractionPrompt = ""
-        gptAgent = OpenAI
+        gptAgent = OpenAI()
         beginningAndEndingLines = gptAgent.open_ai_gpt_call(content, sourceExtractionPrompt) #Calls GPT-3.5, creates the first and last line of the content extracted
         beginningAndEndingLines  = beginningAndEndingLines.replace("\n", " ") # Takes away any line breaks
         beginningAndEndingLines = re.findall(regexExpression, beginningAndEndingLines) #Seperates the result into two strings. [0] = start, [1] = last.

@@ -7,8 +7,9 @@ class FlashcardModelV1 :
         self.gptAgent = OpenAI()
         self.InfoExtraction = InfoExtractorV1()
         self.SentenceIdentifier = SentenceIdentifier()
-    def flashcard_intialise(self, infoExtractPrompt, questionPrompt, textbook_path):
-        rawInfo = self.InfoExtraction.info_extractor(infoExtractPrompt, textbook_path) #creates the raw information
+    def flashcard_intialise(self, textbook_path):
+        questionPrompt = "Create me a tailored, short question for this raw fact to be used in a flashcard : "
+        rawInfo = self.InfoExtraction.info_extractor(textbook_path) #creates the raw information
         answerArray = [sentence for chunk in rawInfo for sentence in self.SentenceIdentifier.split_into_sentences(chunk)]  # <-- change this line
         questionsArray = []
 
