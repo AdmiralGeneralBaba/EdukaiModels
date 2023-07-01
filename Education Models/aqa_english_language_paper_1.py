@@ -4,209 +4,289 @@ import random
 from openai_calls import OpenAI
 
 #########################                               AQA English Language GCSE Paper 1 Exam Generator             ##################################
+class Paper1 : 
+    class SourceExtractor : 
+        def get_pdf_content(self, pdf_file):
+            sourceTextRaw = ""
+            with open(pdf_file, 'rb') as pdf_file_obj:
+                pdf_reader = PyPDF2.PdfFileReader(pdf_file_obj)
+                numpages =  pdf_reader.getNumPages()
 
-class SourceExtractor : 
-    def get_pdf_content(self, pdf_file):
-        sourceTextRaw = ""
-        with open(pdf_file, 'rb') as pdf_file_obj:
-            pdf_reader = PyPDF2.PdfFileReader(pdf_file_obj)
-            numpages =  pdf_reader.getNumPages()
-
-            random_number = random.randint(5, numpages - 5)
+                random_number = random.randint(5, numpages - 5)
+                
+                for i in range(random_number-1, random_number+1) : 
+                    page_obj = pdf_reader.getPage(i)
+                    sourceTextRaw = sourceTextRaw + page_obj.extract_text()
             
-            for i in range(random_number-1, random_number+1) : 
-                page_obj = pdf_reader.getPage(i)
-                sourceTextRaw = sourceTextRaw + page_obj.extract_text()
-        
-        return sourceTextRaw
-    def start_and_end_lines(self, content) : 
-        regexExpression = r'"(.*?)"'
-        sourceExtractionPrompt = ""
-        gptAgent = OpenAI
-        beginningAndEndingLines = gptAgent.open_ai_gpt_call(content, sourceExtractionPrompt) #Calls GPT-3.5, creates the first and last line of the content extracted
-        beginningAndEndingLines  = beginningAndEndingLines.replace("\n", " ") # Takes away any line breaks
-        beginningAndEndingLines = re.findall(regexExpression, beginningAndEndingLines) #Seperates the result into two strings. [0] = start, [1] = last.
-        return beginningAndEndingLines
-    def extract_subsection(self, text, start_sentence, end_sentence):
-        start_index = text.find(start_sentence)
-        end_index = text.find(end_sentence)
+            return sourceTextRaw, random_number, numpages
+        def start_and_end_lines(self, content) : 
+            regexExpression = r'"(.*?)"'
+            sourceExtractionPrompt = ""
+            gptAgent = OpenAI()
+            beginningAndEndingLines = gptAgent.open_ai_gpt_call(content, sourceExtractionPrompt) #Calls GPT-3.5, creates the first and last line of the content extracted
+            beginningAndEndingLines  = beginningAndEndingLines.replace("\n", " ") # Takes away any line breaks
+            beginningAndEndingLines = re.findall(regexExpression, beginningAndEndingLines) #Seperates the result into two strings. [0] = start, [1] = last.
+            return beginningAndEndingLines
+        def extract_subsection(self, text, start_sentence, end_sentence):
+            start_index = text.find(start_sentence)
+            end_index = text.find(end_sentence)
 
-        if start_index == -1 or end_index == -1:
-            return "Start or end sentence not found in the text."
-        
-        # Adjust the indices to include the end sentence
-        end_index += len(end_sentence)
+            if start_index == -1 or end_index == -1:
+                return "Start or end sentence not found in the text."
+            
+            # Adjust the indices to include the end sentence
+            end_index += len(end_sentence)
 
-        # Extract the subsection
-        subsection = text[start_index:end_index]
+            # Extract the subsection
+            subsection = text[start_index:end_index]
 
-        return subsection
-    def source_extraction(self, pdf_file):
-        if isinstance(pdf_file, str) : 
-            content = pdf_file
-        else : 
-            content = self.get_pdf_content(pdf_file)
-        startAndEndLines = self.start_and_end_lines(content)
-        sourceExtract = self.extract_subsection(content, startAndEndLines[0], startAndEndLines[1])
+            return subsection
+        def source_extraction(self, pdf_file):
+            if isinstance(pdf_file, str) : 
+                content = pdf_file
+            else : 
+                content = self.get_pdf_content(pdf_file)
+            startAndEndLines = self.start_and_end_lines(content)
+            sourceExtract = self.extract_subsection(content[0], startAndEndLines[0], startAndEndLines[1])
+            return sourceExtract, content
+    class Question1 : 
+        def character_selection(self, sourceExtract) : 
+            quesOnePrompt = """ Based on this extract, pick out a person of significance for a comprehension questIon of the text. ONLY print out the person's FULL name, 
+                                and nothing else. DO NOT make the question; I REPEAT, ONLY PRINT OUT THE PERSON OF SIGNIFICANCE"""
+            gptAgent = OpenAI()
+            significantCharcter = gptAgent.open_ai_gpt_call(sourceExtract, quesOnePrompt)
+            quesOneStringStructure = f"List four things about {significantCharcter} from this part of the source."
+            
+            return quesOneStringStructure
+        def setting_selection(self, sourceExtract) : 
+            return 
+        def final_model(self, sourceExtract, choice) : 
+            if choice == 0 : 
+                question = self.character_selection(sourceExtract)
+                return question
+            else : 
+                question = self.setting_selection(sourceExtract)
+                return question
+    class Question2 :  
+        def subsection_source(self, sourceExtract) : 
+            subsectionPrompt = f"""Based on this extract, find an interesting section, then output the first and last sentence of this subsection EXCLUSIVELY, 
+                                    with a comma between the two sentences. MAKE SURE the two quotes are BOTH in speech marks. Here is the extract: {sourceExtract}  """
+            gptAgent = OpenAI()
+            twoStrings = gptAgent.open_ai_gpt_call(sourceExtract, subsectionPrompt)
+            source_extractor_instance = Paper1.SourceExtractor()
+            subsection = source_extractor_instance.extract_subsection(sourceExtract, twoStrings[0], twoStrings[1])
 
-class Question1 : 
-    def character_selection(self, sourceExtract) : 
-        quesOnePrompt = ""
-        gptAgent = OpenAI
-        significantCharcter = gptAgent.open_ai_gpt_call(sourceExtract, quesOnePrompt)
-        quesOneStringStructure = f"List four things about {significantCharcter} from this part of the source."
-        
-        return quesOneStringStructure
-    def setting_selection(self, sourceExtract) : 
-        return 
-    def final_model(self, sourceExtract, choice) : 
-        if choice == 0 : 
-            question = self.characterSelection(sourceExtract)
+            return subsection
+        def question_maker(self,subsectionExtract) : 
+            questionMakerPrompt = f"""using the following extract : 
+
+                                    {subsectionExtract}
+
+                                    recreate the following question structure for a GCSE english paper, in relation to the input extract provided, so that you create a question like the one below in your output, ONLY include your output of the recreation of the question structure given. Here is an example of such question: 
+
+                                    How does the writer use language here to describe Ugwu’s impression of the city?
+                                    You could include the writer’s choice of:
+                                    • words and phrases
+                                    • language features and techniques
+                                    • sentence forms.
+
+                                    How does the writer use language here to describe the garden?
+                                    You could include the writer’s choice of:
+                                    • words and phrases
+                                    • language features and techniques
+                                    • sentence forms. """
+
+            gptAgent = OpenAI()
+            question = gptAgent.open_ai_gpt4_call(subsectionExtract, questionMakerPrompt)
             return question
-        else : 
-            question = self.settingSelection(sourceExtract)
-            return question
-class Question2 :  
-    def subsection_source(self, sourceExtract) : 
-        subsectionPrompt = f"""Based on this extract, find an interesting section, then output the first and last sentence of this subsection EXCLUSIVELY, 
-                                with a comma between the two sentences. MAKE SURE the two quotes are BOTH in speech marks. Here is the extract: {sourceExtract}  """
-        gptAgent = OpenAI
-        twoStrings = gptAgent.open_ai_gpt_call(sourceExtract, subsectionPrompt)
-        source_extractor_instance = SourceExtractor()
-        subsection = source_extractor_instance.extract_subsection(sourceExtract, twoStrings[0], twoStrings[1])
+        def combined_model(self, sourceExtract) : 
+            subsectionSource = self.subsection_source(sourceExtract)
+            question = self.question_maker(subsectionSource)
+            return question, subsectionSource
+    class Question3 : 
+        def descriptor(self, sourceExtract, titleOfBook, bookType, pageNumber, bookLength) :
+            describeExtractPrompt = f"""
+                                    , The book is {titleOfBook}, A {bookType}. This is an extract starting from page 
+                                    {pageNumber} out of {bookLength}
 
-        return subsection
-    def question_maker(self,subsectionExtract) : 
-        questionMakerPrompt = f"""using the following extract : 
+                                    Create me a brief description of what this source is supposed to be. 
+                                    Keep the language as simple as the given examples, you should also ALWAYS start with 
+                                    'This text is from' then followed by where the extract is from. It should be very brief, 
+                                    to the point, and simply stated. Here are some examples of what you should output; note, 
+                                    this to help you with structuring your answer, but you don't need to say the exact words in the examples given. 
+                                    DO NOT mention the author name or the book title: 
 
-                                {subsectionExtract}
+                                    (This text is from the opening of a novel. 
+                                    This text is from the middle of a short story.
+                                    This text is from the beginning of a novel. 
+                                    This text is from the end of a novel.
+                                    This text is from the middle of a novel .
+                                    This text is from the opening of a novelle.
+                                    This text is from the opening of a short story.) """
+            gptAgent = OpenAI() 
+            description = gptAgent.open_ai_gpt_call(sourceExtract, describeExtractPrompt)
+            return description
+        def final_model(self, sourceExtract, titleOfBook, bookType, pageNumber, bookLength) : 
+            description = self.descriptor(sourceExtract,titleOfBook,bookType, pageNumber, bookLength)
 
-                                recreate the following question structure for a GCSE english paper, in relation to the input extract provided, so that you create a question like the one below in your output, ONLY include your output of the recreation of the question structure given. Here is an example of such question: 
-
-                                How does the writer use language here to describe Ugwu’s impression of the city?
-                                You could include the writer’s choice of:
-                                • words and phrases
-                                • language features and techniques
-                                • sentence forms.
-
-                                How does the writer use language here to describe the garden?
-                                You could include the writer’s choice of:
-                                • words and phrases
-                                • language features and techniques
-                                • sentence forms. """
-
-        gptAgent = OpenAI
-        question = gptAgent.open_ai_gpt4_call(subsectionExtract, questionMakerPrompt)
-        return question
-    def combined_model(self, sourceExtract) : 
-        subsectionSource = self.subsection_source(sourceExtract)
-        question = self.question_maker(subsectionSource)
-        return question, subsectionSource
-class Question3 : 
-    def descriptor(self, sourceExtract, titleOfBook, bookType, pageNumber, bookLength) :
-        describeExtractPrompt = f"""
-                                , The book is {titleOfBook}, A {bookType}. This is an extract starting from page 
-                                {pageNumber} out of {bookLength}
-
-                                Create me a brief description of what this source is supposed to be. 
-                                Keep the language as simple as the given examples, you should also ALWAYS start with 
-                                'This text is from' then followed by where the extract is from. It should be very brief, 
-                                to the point, and simply stated. Here are some examples of what you should output; note, 
-                                this to help you with structuring your answer, but you don't need to say the exact words in the examples given. 
-                                DO NOT mention the author name or the book title: 
-
-                                (This text is from the opening of a novel. 
-                                This text is from the middle of a short story.
-                                This text is from the beginning of a novel. 
-                                This text is from the end of a novel.
-                                This text is from the middle of a novel .
-                                This text is from the opening of a novelle.
-                                This text is from the opening of a short story.) """
-        gptAgent = OpenAI() 
-        description = gptAgent.open_ai_gpt_call(sourceExtract, describeExtractPrompt)
-        return description
-    def final_model(self, description) : 
-        questionString = f""" You now need to think about the whole of the source.
-                            {description}
-                            How has the writer structured the text to interest you as a reader?
-                            You could write about:
-                            • what the writer focuses your attention on at the beginning of the source
-                            • how and why the writer changes this focus as the source develops
-                            • any other structural features that interest you.
+            questionString = f""" You now need to think about the whole of the source.
+                                {description}
+                                How has the writer structured the text to interest you as a reader?
+                                You could write about:
+                                • what the writer focuses your attention on at the beginning of the source
+                                • how and why the writer changes this focus as the source develops
+                                • any other structural features that interest you.
                             """ 
-        return questionString
-class Question4 : 
-    def focus_question(self, extract) : 
-        question4PromptGPT4 = f"""
-                            . Now with this extract in mind, 
-                            Based on these three exam style questions, I want you to create a new once based on the extract I give you. 
-                            Here are the example questions: 
-                            ( Focus this part of your answer on the second part of the source, from line 25 to
-                            the end.
-                            A student said, ‘This part of the story, where Mr Fisher is marking homework,
-                            shows Tibbet’s story is better than Mr Fisher expected, and his reaction is
-                            extreme.’
-                            To what extent do you agree?
-                            In your response, you could:
-                            • consider your own impressions of what Mr Fisher expected Tibbet’s
-                            homework to be like
-                            • evaluate how the writer conveys Mr Fisher’s reaction to what he discovers
-                            • support your response with references to the text.
+            return questionString
+    class Question4 : 
+        def focus_question(self, extract) : 
+            question4PromptGPT4 = f"""
+                                . Now with this extract in mind, 
+                                Based on these three exam style questions, I want you to create a new once based on the extract I give you. 
+                                Here are the example questions: 
+                                ( Focus this part of your answer on the second part of the source, from line 25 to
+                                the end.
+                                A student said, ‘This part of the story, where Mr Fisher is marking homework,
+                                shows Tibbet’s story is better than Mr Fisher expected, and his reaction is
+                                extreme.’
+                                To what extent do you agree?
+                                In your response, you could:
+                                • consider your own impressions of what Mr Fisher expected Tibbet’s
+                                homework to be like
+                                • evaluate how the writer conveys Mr Fisher’s reaction to what he discovers
+                                • support your response with references to the text.
 
-                            Focus this part of your answer on the second part of the source, from line 24 to the
-                            end.
-                            A student said, ‘I wasn’t at all surprised by the disappearance of the stranger child
-                            at the end of the extract. The writer has left us in no doubt that she is just part of
-                            Rosie’s imagination.’
-                            To what extent do you agree?
-                            In your response, you could:
-                            • consider the disappearance of the stranger child
-                            • evaluate how the writer presents the stranger child
-                            • support your response with references to the text.
+                                Focus this part of your answer on the second part of the source, from line 24 to the
+                                end.
+                                A student said, ‘I wasn’t at all surprised by the disappearance of the stranger child
+                                at the end of the extract. The writer has left us in no doubt that she is just part of
+                                Rosie’s imagination.’
+                                To what extent do you agree?
+                                In your response, you could:
+                                • consider the disappearance of the stranger child
+                                • evaluate how the writer presents the stranger child
+                                • support your response with references to the text.
 
-                            Focus this part of your answer on the second part of the source, from line 20 to the
-                            end.
-                            A student said, ‘From the moment he arrives at Master’s compound, the writer
-                            portrays Ugwu’s feelings of pure excitement, but by the end it seems that he may
-                            be very disappointed.’
-                            To what extent do you agree?
-                            In your response, you could:
-                            • consider your own impressions of Ugwu’s feelings
-                            • evaluate how the write(r describes Ugwu’s feelings by the end
-                            • support your response with references to the text.) 
+                                Focus this part of your answer on the second part of the source, from line 20 to the
+                                end.
+                                A student said, ‘From the moment he arrives at Master’s compound, the writer
+                                portrays Ugwu’s feelings of pure excitement, but by the end it seems that he may
+                                be very disappointed.’
+                                To what extent do you agree?
+                                In your response, you could:
+                                • consider your own impressions of Ugwu’s feelings
+                                • evaluate how the write(r describes Ugwu’s feelings by the end
+                                • support your response with references to the text.) 
 
-                            , and here is the extract. Note, instead of saying 'from line (number)' just output (from line (STARTING SENTENCE HERE))', for that sentence, DO NOT add anything else, 
-                            just continue to the next section once the quote is made.
-                            
-                            """
-        gptAgent = OpenAI()
-        question4 = gptAgent.open_ai_gpt4_call(extract, question4PromptGPT4)
-        return question4
-class Question5: 
-    def __init__(self):
-        self.gptAgent = OpenAI()
+                                , and here is the extract. Note, instead of saying 'from line (number)' just output (from line (STARTING SENTENCE HERE))', for that sentence, DO NOT add anything else, 
+                                just continue to the next section once the quote is made.
+                                
+                                """
+            gptAgent = OpenAI()
+            question4 = gptAgent.open_ai_gpt4_call(extract, question4PromptGPT4)
+            return question4
+    class Question5: 
+        def __init__(self):
+            self.gptAgent = OpenAI()
 
-    def introduction(self):
-        introductionPrompt = "" # input prompt from google drive
-        introduction = self.gptAgent.open_ai_gpt_call(prompt=introductionPrompt)
-        return introduction
+        def introduction(self):
+            introductionPrompt = """Generate one description, similar to the examples provided, relating to the student creating a creative writing answer. Try to vary your answer so that it's unique, but do not make it too long: 
 
-    def write_a_whatever(self): 
-        writeAWhateverPrompt = "" # input prompt from google drive
-        writeAWhatever = self.gptAgent.open_ai_gpt_call(prompt=writeAWhateverPrompt)
-        return writeAWhatever
+                                    Your local newspaper is running a creative writing competition and the best
+                                    entries will be published.
 
-    def describe(self): 
-        describePrompt = "" # input prompt from google drive
-        describe = self.gptAgent.open_ai_gpt_call(prompt=describePrompt)
-        describeImage = self.gptAgent.open_ai_dalle_call_n1(inputPrompt=describe)
-        return describe, describeImage  
+                                    Your local library is running a creative writing competition. The best entries will be
+                                    published in a booklet of creative writing.
 
-    def final_model(self) : 
-        introduction = self.introduction()
-        writeAWhatever = self.write_a_whatever()
-        describe = self.describe()
-        return introduction, writeAWhatever, describe
-        #returns an introduction string, a 'writeAWhatever' string, a 'describe' question string and a URL for a image created by DALLe for the description question
+                                    A magazine has asked for contributions for their creative writing section.
 
+                                    A local community center is organizing a creative writing challenge. Winning entries will be displayed at the center.
+
+                                    Your city's art museum is holding a creative writing contest. The best pieces will be printed in the museum's quarterly publication.
+
+                                    Your local book club is hosting a writing competition. The top stories will be shared at the next meeting.
+
+                                    An online literary magazine is holding a creative writing contest. Winning stories will be published on the website.
+
+                                    Your school's literary club is hosting a creative writing competition. The best entries will be read at the end-of-year ceremony.
+
+                                    A local writer's guild is running a writing competition. The top entries will be featured in their annual journal.
+
+                                    Your city's cultural society is holding a creative writing contest. The best pieces will be published in their newsletter.
+
+                                    A literary website is hosting a writing competition. Winning entries will be published online.
+
+                                    Your local bookstore is running a creative writing competition. The best entries will be displayed in the store.
+
+                                    """ 
+            introduction = self.gptAgent.open_ai_gpt_call(prompt=introductionPrompt)
+            return introduction
         
+        def describe(self): 
+            describePrompt = """ Generate 1 prompt which either ask to describe a scene or tell a story based on a picture, following the same pattern as these examples:
+
+                                Describe the vibrancy of a bustling city as suggested by this picture:
+                                Write a story about a whimsical adventure in a fantasy forest as suggested by this picture:
+                                Write a description of a serene sunset over the ocean as suggested by this picture:Write a description of a serene beach, as suggested by this picture:
+
+
+                                Describe a dramatic storm as suggested by this picture:
+
+                                Write a story about a memorable holiday as suggested by this picture:
+
+                                Write a description of a tranquil meadow as suggested by this picture:
+
+                                Describe a snow-covered village as suggested by this picture: 
+
+                                Write a story about an unexpected journey as suggested by this picture:
+
+                                Write a description of a majestic castle as suggested by this picture:
+                                Keep the prompts varied, involving different scenes, characters, and situations. ONLY output the prompt.
+                                """ 
+            describe = self.gptAgent.open_ai_gpt_call(prompt=describePrompt)
+            describeImage = self.gptAgent.open_ai_dalle_call_n1(inputPrompt=describe)
+            return describe, describeImage  
+        
+        def write_a_whatever(self): 
+            writeAWhateverPrompt = """ Write  a prompt for a student to for them to showcase their creativity. Make sure that the student can only write a narrative from the prompt, or something that involves creative writing(NO plays, poems etc). You must only return a single line.  Here are some examples to help: Write a story about an event that cannot be explained.
+
+                                        Write a story about a new beginning.
+
+                                        Describe a futuristic city as you envision it in the next century.
+
+                                        Write a narrative about a surprising discovery.
+
+                                        Write a story about an unexpected friendship.
+
+                                        Write a tale about a secret door.
+
+                                        Write a narrative about an encounter with a mythical creature.
+
+                                        Describe a bustling city at dawn.
+
+                                        Write a story about a hidden treasure.
+
+                                        Write a story about a stranger's kindness.
+
+                                        Describe the atmosphere of a crowded carnival.
+
+                                        Write a story about a magical book.
+                                    """ 
+            writeAWhatever = self.gptAgent.open_ai_gpt_call(prompt=writeAWhateverPrompt)
+            return writeAWhatever
+
+        def final_model(self) : 
+            introduction = self.introduction()
+            writeAWhatever = self.write_a_whatever()
+            describe = self.describe()
+            return introduction, writeAWhatever, describe
+            #returns an introduction string, a 'writeAWhatever' string, a 'describe' question string and a URL for a image created by DALLe for the description question
+def paper_1_generator(self, pdfFile, ques1Choice, titleOfBook, bookType) : 
+    paper1 = Paper1()
+    source, pageNumber, numpages = paper1.SourceExtractor.source_extraction(pdfFile) # Creates the extract 
+    question1 = paper1.Question1.final_model(source, ques1Choice) # Creates question 1 
+    question2 = paper1.Question2.combined_model(source) # Creates question 2 
+    question3 = paper1.Question3.final_model(source, titleOfBook, bookType, pageNumber, numpages) # Creates question 3
+    question4 = paper1.Question4.focus_question(source) # Creates question 4 
+    question5 = paper1.Question5.final_model() # Creates question 5
+    return question1, question2, question3, question4, question5
