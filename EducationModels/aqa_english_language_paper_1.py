@@ -7,26 +7,43 @@ from openai_calls import OpenAI
 class Paper1 : 
     class SourceExtractor : 
         def get_pdf_content(self, pdf_file):
+            contentGrammerFixerPrompt = """On the following raw text, remove any grammatical errors or spacing, but KEEP THE CONTENT EXACTLY THE SAME : """
             sourceTextRaw = ""
             with open(pdf_file, 'rb') as pdf_file_obj:
-                pdf_reader = PyPDF2.PdfFileReader(pdf_file_obj)
-                numpages =  pdf_reader.getNumPages()
+                pdf_reader = PyPDF2.PdfReader(pdf_file_obj)
+                numpages =  len(pdf_reader.pages)
 
                 random_number = random.randint(5, numpages - 5)
                 
                 for i in range(random_number-1, random_number+1) : 
-                    page_obj = pdf_reader.getPage(i)
+                    page_obj = pdf_reader.pages[i]
                     sourceTextRaw = sourceTextRaw + page_obj.extract_text()
-            
-            return sourceTextRaw, random_number, numpages
+            print(sourceTextRaw)
+            sourceTextRaw  = sourceTextRaw.replace("\n", " ") # Takes away any line breaks
+            print(sourceTextRaw)
+            gptAgent = OpenAI()  # Creating an instance of OpenAI
+            sourceTextNoSpaces = gptAgent.open_ai_gpt_call(user_content=sourceTextRaw, prompt=contentGrammerFixerPrompt)  # Call the method on the instance
+            return sourceTextNoSpaces, random_number, numpages
+
         def start_and_end_lines(self, content) : 
             regexExpression = r'"(.*?)"'
-            sourceExtractionPrompt = ""
+            sourceExtractionPrompt = """Based on this extract, find an interesting section, then output BOTH the first and last sentence of this subsection EXCLUSIVELY, 
+                                    with a comma between the two sentences ON THE OUTSIDE OF THE QUOTED SECTION. MAKE SURE the two quotes are BOTH in speech marks. Your output
+                                    should have the structure here : 
+                                    " {First sentence here } " , " {Last sentence here} "
+                                    an example output is this : 
+                                    "And the boy ran up the hill." , "And when he came home, he was hurt."
+                                    note, this is just an EXAMPLE output; DO NOT output this
+                                    
+                                    Here is the extract : """
+            
             gptAgent = OpenAI()
-            beginningAndEndingLines = gptAgent.open_ai_gpt_call(content, sourceExtractionPrompt) #Calls GPT-3.5, creates the first and last line of the content extracted
+            beginningAndEndingLines = gptAgent.open_ai_gpt_call(content[0], sourceExtractionPrompt) #Calls GPT-3.5, creates the first and last line of the content extracted
             beginningAndEndingLines  = beginningAndEndingLines.replace("\n", " ") # Takes away any line breaks
             beginningAndEndingLines = re.findall(regexExpression, beginningAndEndingLines) #Seperates the result into two strings. [0] = start, [1] = last.
+            print(beginningAndEndingLines)
             return beginningAndEndingLines
+
         def extract_subsection(self, text, start_sentence, end_sentence):
             start_index = text.find(start_sentence)
             end_index = text.find(end_sentence)
@@ -42,15 +59,19 @@ class Paper1 :
 
             return subsection
         def source_extraction(self, pdf_file):
-            if isinstance(pdf_file, str) : 
-                content = pdf_file
-            else : 
-                content = self.get_pdf_content(pdf_file)
+            content = self.get_pdf_content(pdf_file)
             startAndEndLines = self.start_and_end_lines(content)
-            print(content)
-            print(startAndEndLines)
+            print('Start sentence:', startAndEndLines[0])
+            print('End sentence:', startAndEndLines[1])
+            print('Content:', content[0])
             sourceExtract = self.extract_subsection(content[0], startAndEndLines[0], startAndEndLines[1])
-            return sourceExtract, content
+            return sourceExtract
+        
+        def subsection_extraction(self, extract) : 
+            startAndEnd = self.start_and_end_lines(extract)
+            print(startAndEnd)
+            subsection = self.extract_subsection(extract, startAndEnd[0], startAndEnd[1])
+            return subsection
     class Question1 : 
         def character_selection(self, sourceExtract) : 
             quesOnePrompt = """ Based on this extract, pick out a person of significance for a comprehension questIon of the text. ONLY print out the person's FULL name, 
@@ -70,15 +91,6 @@ class Paper1 :
                 question = self.setting_selection(sourceExtract)
                 return question
     class Question2 :  
-        def subsection_source(self, sourceExtract) : 
-            subsectionPrompt = f"""Based on this extract, find an interesting section, then output the first and last sentence of this subsection EXCLUSIVELY, 
-                                    with a comma between the two sentences. MAKE SURE the two quotes are BOTH in speech marks. Here is the extract: {sourceExtract}  """
-            gptAgent = OpenAI()
-            twoStrings = gptAgent.open_ai_gpt_call(sourceExtract, subsectionPrompt)
-            source_extractor_instance = Paper1.SourceExtractor()
-            subsection = source_extractor_instance.extract_subsection(sourceExtract, twoStrings[0], twoStrings[1])
-
-            return subsection
         def question_maker(self,subsectionExtract) : 
             questionMakerPrompt = f"""using the following extract : 
 
@@ -99,12 +111,13 @@ class Paper1 :
                                     • sentence forms. """
 
             gptAgent = OpenAI()
-            question = gptAgent.open_ai_gpt4_call(subsectionExtract, questionMakerPrompt)
+            question = gptAgent.open_ai_gpt_call(subsectionExtract, questionMakerPrompt)
             return question
         def combined_model(self, sourceExtract) : 
-            subsectionSource = self.subsection_source(sourceExtract)
-            question = self.question_maker(subsectionSource)
-            return question, subsectionSource
+            subSourceExtractor = Paper1.SourceExtractor()
+            subSourceExtractor.subsection_extraction(sourceExtract)
+            question = self.question_maker(subSourceExtractor)
+            return question, subSourceExtractor
     class Question3 : 
         def descriptor(self, sourceExtract, titleOfBook, bookType, pageNumber, bookLength) :
             describeExtractPrompt = f"""
@@ -301,10 +314,19 @@ questionPrompt = "Write a me a tailored question for the following raw fact for 
 school = "Primary School"
 choice = 0
 paper1 = Paper1()
+
+
 sourceExtractorInstance = paper1.SourceExtractor()
-sourceExtract = sourceExtractorInstance.source_extraction(pdf_file=path)
+sourceExtract = sourceExtractorInstance.source_extraction(path)
+
 
 print(sourceExtract)
+startAndEnd = sourceExtractorInstance.start_and_end_lines(sourceExtract)
+print(startAndEnd[0], startAndEnd[1])
+
+# paper1InstanceQues2 = paper1.Question2()
+# ques2Contract = paper1InstanceQues2.combined_model(sourceExtract)
+# print(ques2Contract)
 
 # question1 = paper1.Question1.final_model(path, choice) 
 # print(question1)

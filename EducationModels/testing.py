@@ -4,31 +4,47 @@ import re
 from openai_calls import OpenAI
 
 def get_pdf_content(pdf_file):
-        contentGrammerFixerPrompt = """On the following raw PDF text, remove any grammtical errors or spacing, but KEEP THE CONTENT EXACTLY THE SAME. 
-                                       PDF text : """
-        sourceTextRaw = ""
-        with open(pdf_file, 'rb') as pdf_file_obj:
-            pdf_reader = PyPDF2.PdfReader(pdf_file_obj)
-            numpages =  len(pdf_reader.pages)
+    contentGrammerFixerPrompt = """On the following raw text, remove any grammatical errors or spacing, but KEEP THE CONTENT EXACTLY THE SAME : """
+    sourceTextRaw = ""
+    with open(pdf_file, 'rb') as pdf_file_obj:
+        pdf_reader = PyPDF2.PdfReader(pdf_file_obj)
+        numpages =  len(pdf_reader.pages)
 
-            random_number = random.randint(5, numpages - 5)
-            
-            for i in range(random_number-1, random_number+1) : 
-                page_obj = pdf_reader.pages[i]
-                sourceTextRaw = sourceTextRaw + page_obj.extract_text()
-        sourceTextRaw  = sourceTextRaw.replace("\n", " ") # Takes away any line breaks
-        sourceTextRaw = OpenAI.open_ai_gpt_call(sourceTextRaw, contentGrammerFixerPrompt)
-        return sourceTextRaw, random_number, numpages
+        random_number = random.randint(5, numpages - 5)
+        
+        for i in range(random_number-1, random_number+1) : 
+            page_obj = pdf_reader.pages[i]
+            sourceTextRaw = sourceTextRaw + page_obj.extract_text()
+    
+    sourceTextRaw  = sourceTextRaw.replace("\n", " ") # Takes away any line breaks
+    print(sourceTextRaw)
+    gptAgent = OpenAI()  # Creating an instance of OpenAI
+    sourceTextNoSpaces = gptAgent.open_ai_gpt_call(user_content=sourceTextRaw, prompt=contentGrammerFixerPrompt)  # Call the method on the instance
+    print(sourceTextNoSpaces)
+    return sourceTextNoSpaces, random_number, numpages
 
-def start_and_end_lines(content) : 
+def start_and_end_lines(self, content) : 
     regexExpression = r'"(.*?)"'
-    sourceExtractionPrompt = """Based on this extract, find an interesting section, then output the first and last sentence of this subsection EXCLUSIVELY, 
-                                with a comma between the two sentences. MAKE SURE the two quotes are BOTH in speech marks. Here is the extract:"""
+    sourceExtractionPrompt = """Based on this extract, find an interesting section, then output BOTH the first and last sentence of this subsection EXCLUSIVELY, 
+                                with a comma between the two sentences ON THE OUTSIDE OF THE QUOTED SECTION. MAKE SURE the two quotes are BOTH in speech marks. Your output
+                                should have the structure here : 
+                                " {First sentence here } " , " {Last sentence here} "
+                                an example output is this : 
+                                "And the boy ran up the hill." , "And when he came home, he was hurt."
+                                note, this is just an EXAMPLE output; DO NOT output this
+
+                                Here is the extract : """
        
     gptAgent = OpenAI()
-    beginningAndEndingLines = gptAgent.open_ai_gpt_call(content, sourceExtractionPrompt) #Calls GPT-3.5, creates the first and last line of the content extracted
+    
+    if isinstance(content, list):
+        beginningAndEndingLines = gptAgent.open_ai_gpt_call(content[0], sourceExtractionPrompt) #Calls GPT-3.5, creates the first and last line of the content extracted
+    else: 
+        beginningAndEndingLines = gptAgent.open_ai_gpt_call(content, sourceExtractionPrompt)
+
     beginningAndEndingLines  = beginningAndEndingLines.replace("\n", " ") # Takes away any line breaks
     beginningAndEndingLines = re.findall(regexExpression, beginningAndEndingLines) #Seperates the result into two strings. [0] = start, [1] = last.
+    print(beginningAndEndingLines)
     return beginningAndEndingLines
 
 def extract_subsection(text, start_sentence, end_sentence):
@@ -45,6 +61,15 @@ def extract_subsection(text, start_sentence, end_sentence):
             subsection = text[start_index:end_index]
 
             return subsection
+def source_extraction(pdf_file):
+    
+        content = get_pdf_content(pdf_file)
+        startAndEndLines = start_and_end_lines(content)
+        print('Start sentence:', startAndEndLines[0])
+        print('End sentence:', startAndEndLines[1])
+        print('Content:', content[0])
+        sourceExtract = extract_subsection(content[0], startAndEndLines[0], startAndEndLines[1])
+        return sourceExtract
 
 
 
@@ -55,10 +80,5 @@ school = "Primary School"
 choice = 0
 
 
-content = get_pdf_content(path)
-# startAndEnd = start_and_end_lines(content[0])
-# subsectionExtracted = extract_subsection(content[0], startAndEnd[0], startAndEnd[1])
-
-print(content)
-# print(startAndEnd)
-# print(subsectionExtracted)
+content = get_pdf_content(path) 
+print(start_and_end_lines(content))
