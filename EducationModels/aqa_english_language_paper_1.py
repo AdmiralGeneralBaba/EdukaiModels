@@ -47,6 +47,8 @@ class Paper1 :
             else : 
                 content = self.get_pdf_content(pdf_file)
             startAndEndLines = self.start_and_end_lines(content)
+            print(content)
+            print(startAndEndLines)
             sourceExtract = self.extract_subsection(content[0], startAndEndLines[0], startAndEndLines[1])
             return sourceExtract, content
     class Question1 : 
@@ -290,3 +292,19 @@ def aqa_english_language_paper_1_generator(self, pdfFile, ques1Choice, titleOfBo
     question4 = paper1.Question4.focus_question(source) # Creates question 4 
     question5 = paper1.Question5.final_model() # Creates question 5
     return question1, question2, question3, question4, question5
+
+
+
+path = "C:\\Users\\david\\Desktop\\Edukai\\AI models\\Info extractor\\meetingminutes.pdf"
+listPrompt = "list all of the facts in this piece of text. Make sure to include ALL raw information, and nothing more."
+questionPrompt = "Write a me a tailored question for the following raw fact for a flashcard."
+school = "Primary School"
+choice = 0
+paper1 = Paper1()
+sourceExtractorInstance = paper1.SourceExtractor()
+sourceExtract = sourceExtractorInstance.source_extraction(pdf_file=path)
+
+print(sourceExtract)
+
+# question1 = paper1.Question1.final_model(path, choice) 
+# print(question1)
