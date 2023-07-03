@@ -7,7 +7,7 @@ from EducationModels.yearly_plan_ai_models_v1 import YearlyPlanCreatorV1
 
 
 class EducationModels : 
-    AQAEnglishLanguagePaper1 = aqa_english_language_paper_1_generator(path,0, 'Meeting Minutes', 'Debrief') # Assuming that paper_1_generator is a class
+    # AQAEnglishLanguagePaper1 = aqa_english_language_paper_1_generator(path ,0, 'Meeting Minutes', 'Debrief') # Assuming that paper_1_generator is a class
     flashcardModel = FlashcardModelV1()
     smartGpt = SmartGPTV1()
     tutorAi = TutorAIV1()
