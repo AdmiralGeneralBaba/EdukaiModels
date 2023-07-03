@@ -37,10 +37,11 @@ def start_and_end_lines(self, content) :
        
     gptAgent = OpenAI()
     
-    if isinstance(content, list):
-        beginningAndEndingLines = gptAgent.open_ai_gpt_call(content[0], sourceExtractionPrompt) #Calls GPT-3.5, creates the first and last line of the content extracted
+    if isinstance(content, str):
+        beginningAndEndingLines = gptAgent.open_ai_gpt_call(content, sourceExtractionPrompt)  # Use content directly if it's a string
     else: 
-        beginningAndEndingLines = gptAgent.open_ai_gpt_call(content, sourceExtractionPrompt)
+        beginningAndEndingLines = gptAgent.open_ai_gpt_call(content[0], sourceExtractionPrompt)  # Assume it's a list otherwise
+
 
     beginningAndEndingLines  = beginningAndEndingLines.replace("\n", " ") # Takes away any line breaks
     beginningAndEndingLines = re.findall(regexExpression, beginningAndEndingLines) #Seperates the result into two strings. [0] = start, [1] = last.

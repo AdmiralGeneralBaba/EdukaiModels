@@ -28,22 +28,27 @@ class Paper1 :
         def start_and_end_lines(self, content) : 
             regexExpression = r'"(.*?)"'
             sourceExtractionPrompt = """Based on this extract, find an interesting section, then output BOTH the first and last sentence of this subsection EXCLUSIVELY, 
-                                    with a comma between the two sentences ON THE OUTSIDE OF THE QUOTED SECTION. MAKE SURE the two quotes are BOTH in speech marks. Your output
-                                    should have the structure here : 
-                                    " {First sentence here } " , " {Last sentence here} "
-                                    an example output is this : 
-                                    "And the boy ran up the hill." , "And when he came home, he was hurt."
-                                    note, this is just an EXAMPLE output; DO NOT output this
-                                    
-                                    Here is the extract : """
+                                        with a comma between the two sentences ON THE OUTSIDE OF THE QUOTED SECTION. MAKE SURE the two quotes are BOTH in speech marks. Your output
+                                        should have the structure here : 
+                                        " {First sentence here } " , " {Last sentence here} "
+                                        an example output is this : 
+                                        "And the boy ran up the hill." , "And when he came home, he was hurt."
+                                        note, this is just an EXAMPLE output; DO NOT output this
+
+                                        Here is the extract : """
             
             gptAgent = OpenAI()
-            beginningAndEndingLines = gptAgent.open_ai_gpt_call(content[0], sourceExtractionPrompt) #Calls GPT-3.5, creates the first and last line of the content extracted
+            
+            if isinstance(content, str):
+                beginningAndEndingLines = gptAgent.open_ai_gpt_call(content, sourceExtractionPrompt)  # Use content directly if it's a string
+            else: 
+                beginningAndEndingLines = gptAgent.open_ai_gpt_call(content[0], sourceExtractionPrompt)  # Assume it's a list otherwise
+
+
             beginningAndEndingLines  = beginningAndEndingLines.replace("\n", " ") # Takes away any line breaks
             beginningAndEndingLines = re.findall(regexExpression, beginningAndEndingLines) #Seperates the result into two strings. [0] = start, [1] = last.
             print(beginningAndEndingLines)
             return beginningAndEndingLines
-
         def extract_subsection(self, text, start_sentence, end_sentence):
             start_index = text.find(start_sentence)
             end_index = text.find(end_sentence)
