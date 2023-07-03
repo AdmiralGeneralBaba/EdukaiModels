@@ -18,11 +18,12 @@ class Paper1 :
                 for i in range(random_number-1, random_number+1) : 
                     page_obj = pdf_reader.pages[i]
                     sourceTextRaw = sourceTextRaw + page_obj.extract_text()
-            print(sourceTextRaw)
+            
             sourceTextRaw  = sourceTextRaw.replace("\n", " ") # Takes away any line breaks
             print(sourceTextRaw)
             gptAgent = OpenAI()  # Creating an instance of OpenAI
             sourceTextNoSpaces = gptAgent.open_ai_gpt_call(user_content=sourceTextRaw, prompt=contentGrammerFixerPrompt)  # Call the method on the instance
+            print(sourceTextNoSpaces)
             return sourceTextNoSpaces, random_number, numpages
 
         def start_and_end_lines(self, content) : 
@@ -49,34 +50,30 @@ class Paper1 :
             beginningAndEndingLines = re.findall(regexExpression, beginningAndEndingLines) #Seperates the result into two strings. [0] = start, [1] = last.
             print(beginningAndEndingLines)
             return beginningAndEndingLines
+
         def extract_subsection(self, text, start_sentence, end_sentence):
-            start_index = text.find(start_sentence)
-            end_index = text.find(end_sentence)
+                    start_index = text.find(start_sentence)
+                    end_index = text.find(end_sentence)
 
-            if start_index == -1 or end_index == -1:
-                return "Start or end sentence not found in the text."
-            
-            # Adjust the indices to include the end sentence
-            end_index += len(end_sentence)
+                    if start_index == -1 or end_index == -1:
+                        return "Start or end sentence not found in the text."
+                    
+                    # Adjust the indices to include the end sentence
+                    end_index += len(end_sentence)
 
-            # Extract the subsection
-            subsection = text[start_index:end_index]
+                    # Extract the subsection
+                    subsection = text[start_index:end_index]
 
-            return subsection
+                    return subsection
         def source_extraction(self, pdf_file):
-            content = self.get_pdf_content(pdf_file)
-            startAndEndLines = self.start_and_end_lines(content)
-            print('Start sentence:', startAndEndLines[0])
-            print('End sentence:', startAndEndLines[1])
-            print('Content:', content[0])
-            sourceExtract = self.extract_subsection(content[0], startAndEndLines[0], startAndEndLines[1])
-            return sourceExtract
-        
-        def subsection_extraction(self, extract) : 
-            startAndEnd = self.start_and_end_lines(extract)
-            print(startAndEnd)
-            subsection = self.extract_subsection(extract, startAndEnd[0], startAndEnd[1])
-            return subsection
+            
+                content = self.get_pdf_content(pdf_file)
+                startAndEndLines = self.start_and_end_lines(content)
+                print('Start sentence:', startAndEndLines[0])
+                print('End sentence:', startAndEndLines[1])
+                print('Content:', content[0])
+                sourceExtract = self.extract_subsection(content[0], startAndEndLines[0], startAndEndLines[1])
+                return sourceExtract
     class Question1 : 
         def character_selection(self, sourceExtract) : 
             quesOnePrompt = """ Based on this extract, pick out a person of significance for a comprehension questIon of the text. ONLY print out the person's FULL name, 
@@ -325,13 +322,13 @@ sourceExtractorInstance = paper1.SourceExtractor()
 sourceExtract = sourceExtractorInstance.source_extraction(path)
 
 
-print(sourceExtract)
-startAndEnd = sourceExtractorInstance.start_and_end_lines(sourceExtract)
-print(startAndEnd[0], startAndEnd[1])
+# print(sourceExtract)
+# startAndEnd = sourceExtractorInstance.start_and_end_lines(sourceExtract)
+# print(startAndEnd[0], startAndEnd[1])
 
-# paper1InstanceQues2 = paper1.Question2()
-# ques2Contract = paper1InstanceQues2.combined_model(sourceExtract)
-# print(ques2Contract)
+paper1InstanceQues2 = paper1.Question2()
+ques2Contract = paper1InstanceQues2.combined_model(sourceExtract)
+print(ques2Contract)
 
 # question1 = paper1.Question1.final_model(path, choice) 
 # print(question1)
