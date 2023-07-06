@@ -57,3 +57,11 @@ class YearlyPlanCreatorV1 :
         lessonPlanFacts = self.yearly_plan_facts_per_lesson(lessonNumber, path)
         finalLessonStructure = self.yearly_plan_powerpoint_creator(lessonPlanFacts)
         return finalLessonStructure
+    
+
+path = "C:\\Users\\david\\Desktop\\Edukai\\AI models\\Info extractor\\HoI_IV_Strategy_Guide.pdf"
+yearlyPlan = YearlyPlanCreatorV1()
+facts = yearlyPlan.yearly_plan_facts_per_lesson(5, path)
+
+
+print(facts)

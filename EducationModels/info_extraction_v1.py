@@ -8,9 +8,8 @@ class InfoExtractorV1 :
            self.gptAgent = OpenAI()          
         def chunker(self, path) :
             pdfFileObj = open(path, 'rb')
-            pdfReader = PyPDF2.PdfReader(pdfFileObj)  # Use PdfReader instead of PdfFileReader
-            num_pages = len(pdfReader.pages)  # Use len(pdfReader.pages) instead of pdfReader.numPages
-
+            pdfReader = PyPDF2.PdfReader(pdfFileObj) 
+            num_pages = len(pdfReader.pages)  
             pages = len(pdfReader.pages)
 
             chunks = []
@@ -53,7 +52,14 @@ class InfoExtractorV1 :
             return chunks
         # Reads a pdf, inputs them into chunks into GPT-3.5, then returns the raw facts from the file. 
         def info_extractor(self, textbook_path): 
-            listPrompt = "list all of the facts in this piece of text. Make sure to include ALL raw information, and nothing more."
+            listPrompt = """ list EVERY SINGLE fact in this piece of text. Make sure to include ALL raw information, and nothing more. When listing the facts, 
+                             ONLY print out the information. DO NOT have any number indicating what it is. Here are examples of how the facts should be printed out:
+                             { 
+                             The empire state building is one of the tallest buildings in manhatten
+                             England is a part of Great Britain 
+                             Donald Trump was the president from 2016 to 2020
+                             }
+                             """
 
             rawFacts = []
             textbookChuncked = self.chunker(textbook_path)    
@@ -78,7 +84,7 @@ class SentenceIdentifier :
             If the text contains substrings "<prd>" or "<stop>", they would lead 
             to incorrect splitting because they are used as markers for splitting.
 
-            :param text: text to be split into sentences
+            :param text: text to be split               into sentences
             :type text: str
 
             :return: list of sentences

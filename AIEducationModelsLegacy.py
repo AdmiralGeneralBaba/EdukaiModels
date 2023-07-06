@@ -175,8 +175,8 @@ class FlashcardModels :
             self.gptAgent = AiOfficalModels.OpenAI()
             self.InfoExtraction = GeneralAiModels.InfoExtractorV1()
             self.SentenceIdentifier = GeneralAiModels.SentenceIdentifier()
-        def flashcard_intialise(self, infoExtractPrompt, questionPrompt, textbook_path):
-            rawInfo = self.InfoExtraction.info_extractor(infoExtractPrompt, textbook_path) #creates the raw information
+        def flashcard_intialise(self, questionPrompt, textbook_path):
+            rawInfo = self.InfoExtraction.info_extractor(textbook_path) #creates the raw information
             answerArray = [sentence for chunk in rawInfo for sentence in self.SentenceIdentifier.split_into_sentences(chunk)]  # <-- change this line
             questionsArray = []
 
@@ -372,6 +372,7 @@ class ExamCreatorModels :
 path = "C:\\Users\\david\\Desktop\\Edukai\\AI models\\Info extractor\\meetingminutes.pdf"
 listPrompt = "list all of the facts in this piece of text. Make sure to include ALL raw information, and nothing more."
 questionPrompt = "Write a me a tailored question for the following raw fact for a flashcard."
+infoExtractPrompt = ""
 school = "Primary School"
 # test = yearlyPlanProcess.yearlyPlanCreator()
 #lessonisedFacts = test.yearly_plan_facts_per_lesson(2, path)
@@ -383,3 +384,8 @@ school = "Primary School"
 #tutorAitest = tutorAiModels.TutorAIV1().tutor_ai_initialise()
 # print(os.getenv("PINECONE_ENV"))
 # print(os.getenv("PINECONE_API_KEY"))
+
+flashcardMaker = FlashcardModels.FlashcardModelV1()
+flashcards = flashcardMaker.flashcard_intialise(questionPrompt, path)
+print(flashcards[0])
+print(flashcards[1])
