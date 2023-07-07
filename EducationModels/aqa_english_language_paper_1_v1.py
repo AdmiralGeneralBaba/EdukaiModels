@@ -78,7 +78,6 @@ class Paper1 :
         
         def subsection_extraction(self, extract) : 
             startAndEnd = self.start_and_end_lines(extract)
-            print(startAndEnd)
             subsection = self.extract_subsection(extract, startAndEnd[0], startAndEnd[1])
             return subsection
     class Question1 : 
@@ -101,11 +100,7 @@ class Paper1 :
                 return question
     class Question2 :  
         def question_maker(self,subsectionExtract) : 
-            questionMakerPrompt = f"""using the following extract : 
-
-                                    {subsectionExtract}
-
-                                    recreate the following question structure for a GCSE english paper, in relation to the input extract provided, so that you create a question like the one below in your output, ONLY include your output of the recreation of the question structure given. Here is an example of such question: 
+            questionMakerPrompt = f"""using the extract provided, recreate the following question structure for a GCSE english paper, in relation to the input extract provided, so that you create a question like the one below in your output, ONLY include your output of the recreation of the question structure given. Here is an example of such question: 
 
                                     How does the writer use language here to describe Ugwu’s impression of the city?
                                     You could include the writer’s choice of:
@@ -124,8 +119,8 @@ class Paper1 :
             return question
         def combined_model(self, sourceExtract) : 
             subSourceExtractor = Paper1.SourceExtractor()
-            subSourceExtractor.subsection_extraction(sourceExtract)
-            question = self.question_maker(subSourceExtractor)
+            subSourceExtraction = subSourceExtractor.subsection_extraction(sourceExtract)
+            question = self.question_maker(subSourceExtraction)
             return question, subSourceExtractor
     class Question3 : 
         def descriptor(self, sourceExtract, titleOfBook, bookType, pageNumber, bookLength) :
@@ -317,7 +312,7 @@ def aqa_english_language_paper_1_generator(self, pdfFile, ques1Choice, titleOfBo
 
 
 
-path = "C:\\Users\\david\\Desktop\\Edukai\\AI models\\Info extractor\\meetingminutes.pdf"
+path = "C:\\Users\\david\\Desktop\\Edukai\\AI models\\Info extractor\\HoI_IV_Strategy_Guide.pdf"
 listPrompt = "list all of the facts in this piece of text. Make sure to include ALL raw information, and nothing more."
 questionPrompt = "Write a me a tailored question for the following raw fact for a flashcard."
 school = "Primary School"
@@ -336,6 +331,6 @@ print(startAndEnd[0], startAndEnd[1])
 paper1InstanceQues2 = paper1.Question2()
 ques2Contract = paper1InstanceQues2.combined_model(sourceExtract)
 print(ques2Contract)
-    
+
 # question1 = paper1.Question1.final_model(path, choice) 
 # print(question1)

@@ -46,7 +46,7 @@ class YearlyPlanCreatorV2() :
         return homeworkContent
     def homework_creator_template_one(lessonFacts, gptType) : 
         gptAgent = OpenAI() # Creates a GPTAgent
-        homeworkTemplateOneCreationPrompt = """Imagine you are a teacher creating a piece of homework intended for after class. Based on the following raw facts that were gone over in the lesson, create an engaging and optimal homework sheet for students to learn the content. Follow these steps to create the homework task, but ONLY ouput the sections that students need to see:
+        homeworkTemplateOneCreationPrompt = """ Imagine you are a teacher creating a piece of homework intended for after class. Based on the following raw facts that were gone over in the lesson, create an engaging and optimal homework sheet for students to learn the content. Follow these steps to create the homework task, but ONLY ouput the sections that students need to see:
 
                                                 1. Define Learning Goals: Determine the knowledge students should gain.
                                                 2. Examine Raw Facts: Analyze your chosen facts, understanding their potential learning value.
