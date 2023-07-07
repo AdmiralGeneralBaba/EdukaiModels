@@ -4,41 +4,38 @@ from info_extraction_v1 import SentenceIdentifier
 import re
 
 class YearlyPlanCreatorV2() : 
-    def yearly_plan_facts_per_lesson(pdf_path) : 
+    def yearly_plan_facts_per_lesson(pdf_path): 
         infoExtract = InfoExtractorV1()
-        sentenceSplitter = SentenceIdentifier()
         rawFacts = infoExtract.info_extractor(pdf_path)
-        sentences = []
-     
-        # Initialize list and character counter
-        my_list = []
-        total_characters = 0
+    
         # Initialize variables
         lessons = []
         current_lesson = ""
         char_limit = 1500
-        
-        # Split the lesson_text into sentences using the sentence_splitter function
-        for i in range(len(rawFacts)):
-            sentences.extend(sentenceSplitter.split_into_sentences(rawFacts[i]))
 
+        # Split the raw facts into separate strings
+        rawFactsSplit = []
+        for fact in rawFacts:
+            rawFactsSplit.extend(re.split('\n-|\n', fact))
 
-
-        # Loop through sentences
-        for sentence in sentences:
-            # If adding the next sentence doesn't exceed the char_limit, add the sentence to the current lesson
-            if len(current_lesson + sentence) <= char_limit:
-                current_lesson += sentence
+        # Loop through raw facts
+        for rawFact in rawFactsSplit:
+            # If adding the next fact doesn't exceed the char_limit, add the fact to the current lesson
+            if len(current_lesson + rawFact) <= char_limit:
+                current_lesson += rawFact
             # If it does, append the current lesson to lessons and start a new lesson
             else:
                 lessons.append(current_lesson)
-                current_lesson = sentence
+                current_lesson = rawFact
 
         # Append the last lesson if it's non-empty
         if current_lesson:
             lessons.append(current_lesson)
+
         print(rawFacts)
         return lessons
+
+
     def yearly_plan_homework_creator(lessons, schoolType) :
         homeworkContent = [] 
         homeworkPrompt = f"""Pretend you are a teacher for a {schoolType}. Based on the following raw facts, create a homework assignemnet for students to compelete.
