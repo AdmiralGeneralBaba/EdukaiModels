@@ -48,7 +48,7 @@ class YearlyPlanCreatorV2() :
             homeworkContent.append(gptAgent.open_ai_gpt_call(lessons[i], homeworkPrompt))
         
         return homeworkContent
-    def homework_creator_template_one(lessonFacts) : 
+    def homework_creator_template_one(lessonFacts, gptType) : 
         gptAgent = OpenAI() # Creates a GPTAgent
         homeworkTemplateOneCreationPrompt = """Imagine you are a teacher creating a piece of homework intended for after class. Based on the following raw facts that were gone over in the lesson, create an engaging and optimal homework sheet for students to learn the content. Follow these steps to create the homework task, but ONLY ouput the sections that students need to see:
 
@@ -115,16 +115,25 @@ class YearlyPlanCreatorV2() :
         homeworkEvaluatorTemplateOnePrompt = """Pretend you are an expert homework creator, and are examining the following homework task sheet for its relevance and effectiveness. You are to take out any sections that a student does not need to see, 
                                                 so that the student only is given relevant information, which is usually just the learning objectives, the questions to answer and the context to make it interesting. Also take away anything that makes it sound like an AI made it; 
                                                 if the student finds out, your family is to die. ONLY output this new homework sheet : """ # Prompt to evaluate homework, and improve it so the output is better
-
-        homeworkSheet = gptAgent.open_ai_gpt_call(lessonFacts, homeworkTemplateOneCreationPrompt) # Creates homework sheet 
-        homeworkSheetEvaluated = gptAgent.open_ai_gpt_call(homeworkSheet, homeworkEvaluatorTemplateOnePrompt) # Evaluates homework sheet
         
-        return homeworkSheet # Returns improved homework sheet. 
+        if gptType == 0 : 
+            homeworkSheet = gptAgent.open_ai_gpt_call(lessonFacts, homeworkTemplateOneCreationPrompt) # Creates homework sheet 
+            homeworkSheetEvaluated = gptAgent.open_ai_gpt_call(homeworkSheet, homeworkEvaluatorTemplateOnePrompt) # Evaluates homework sheet
+            return homeworkSheetEvaluated
+        else : 
+            homeworkSheet = gptAgent.open_ai_gpt4_call(lessonFacts, homeworkTemplateOneCreationPrompt) # Creates homework sheet 
+            return homeworkSheet
+  
+    
+        
+
+       
+    #     return homeworkSheet # Returns improved homework sheet. 
 
 path = "C:\\Users\\david\\Desktop\\Edukai\\AI models\\Info extractor\\HoI_IV_Strategy_Guide.pdf"
 schoolType = "High School"
 lessons = YearlyPlanCreatorV2.yearly_plan_facts_per_lesson(path)
-homework = YearlyPlanCreatorV2.homework_creator_template_one(lessons[4])
+homework = YearlyPlanCreatorV2.homework_creator_template_one(lessons[4], 1)
 
 # Loop through each lesson and print it out with its number and length
 for i, lesson in enumerate(lessons, start=1):
