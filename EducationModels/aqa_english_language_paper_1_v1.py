@@ -336,6 +336,6 @@ print(startAndEnd[0], startAndEnd[1])
 paper1InstanceQues2 = paper1.Question2()
 ques2Contract = paper1InstanceQues2.combined_model(sourceExtract)
 print(ques2Contract)
-
+    
 # question1 = paper1.Question1.final_model(path, choice) 
 # print(question1)

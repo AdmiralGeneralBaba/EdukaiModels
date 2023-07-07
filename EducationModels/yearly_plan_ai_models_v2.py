@@ -5,18 +5,18 @@ import re
 
 class YearlyPlanCreatorV2() : 
     def yearly_plan_facts_per_lesson(pdf_path): 
-        infoExtract = InfoExtractorV1()
-        rawFacts = infoExtract.info_extractor(pdf_path)
+        infoExtract = InfoExtractorV1() #Creates the infoExtractor 
+        rawFacts = infoExtract.info_extractor(pdf_path) # Calls info extractor
     
         # Initialize variables
         lessons = []
         current_lesson = ""
-        char_limit = 1500
+        char_limit = 1500 # Char limit for each of the lesson's raw facts CANNOT go over 
 
         # Split the raw facts into separate strings
-        rawFactsSplit = []
+        rawFactsSplit = [] 
         for fact in rawFacts:
-            rawFactsSplit.extend(re.split('\n-|\n', fact))
+            rawFactsSplit.extend(re.split('\n-|\n', fact)) # Splits up gpt-3.5's message into raw facts
 
         # Loop through raw facts
         for rawFact in rawFactsSplit:
@@ -32,7 +32,6 @@ class YearlyPlanCreatorV2() :
         if current_lesson:
             lessons.append(current_lesson)
 
-        print(rawFacts)
         return lessons
 
 
@@ -120,13 +119,10 @@ class YearlyPlanCreatorV2() :
         else : 
             homeworkSheet = gptAgent.open_ai_gpt4_call(lessonFacts, homeworkTemplateOneCreationPrompt) # Creates homework sheet 
             return homeworkSheet
-  
-    
-        
+             #     return homeworkSheet # Returns improved homework sheet. 
 
-       
-    #     return homeworkSheet # Returns improved homework sheet. 
 
+#######################         TESTING CODE           ########################### : 
 path = "C:\\Users\\david\\Desktop\\Edukai\\AI models\\Info extractor\\HoI_IV_Strategy_Guide.pdf"
 schoolType = "High School"
 lessons = YearlyPlanCreatorV2.yearly_plan_facts_per_lesson(path)
