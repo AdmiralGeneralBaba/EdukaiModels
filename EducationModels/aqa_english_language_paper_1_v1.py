@@ -13,9 +13,9 @@ class Paper1 :
                 pdf_reader = PyPDF2.PdfReader(pdf_file_obj)
                 numpages =  len(pdf_reader.pages)
 
-                random_number = random.randint(5, numpages - 5)
+                pageNumber = random.randint(5, numpages - 5)
                 
-                for i in range(random_number-1, random_number+1) : 
+                for i in range(pageNumber-1, pageNumber+1) : 
                     page_obj = pdf_reader.pages[i]
                     sourceTextRaw = sourceTextRaw + page_obj.extract_text()
             
@@ -24,7 +24,7 @@ class Paper1 :
             gptAgent = OpenAI()  # Creating an instance of OpenAI
             sourceTextNoSpaces = gptAgent.open_ai_gpt_call(user_content=sourceTextRaw, prompt=contentGrammerFixerPrompt)  # Call the method on the instance
             print(sourceTextNoSpaces)
-            return sourceTextNoSpaces, random_number, numpages
+            return sourceTextNoSpaces, pageNumber, numpages
 
         def start_and_end_lines(self, content) : 
             regexExpression = r'"(.*?)"'
@@ -68,12 +68,14 @@ class Paper1 :
         def source_extraction(self, pdf_file):
 
             content = self.get_pdf_content(pdf_file)
-            startAndEndLines = self.start_and_end_lines(content)
+            
+            startAndEndLines = self.start_and_end_lines(content[0])
             print('Start sentence:', startAndEndLines[0])
             print('End sentence:', startAndEndLines[1])
             print('Content:', content[0])
             sourceExtract = self.extract_subsection(content[0], startAndEndLines[0], startAndEndLines[1])
-            return sourceExtract
+            
+            return sourceExtract, content[1], content[2]
 
         
         def subsection_extraction(self, extract) : 
@@ -123,10 +125,10 @@ class Paper1 :
             question = self.question_maker(subSourceExtraction)
             return question, subSourceExtractor
     class Question3 : 
-        def descriptor(self, sourceExtract, titleOfBook, bookType, pageNumber, bookLength) :
+        def descriptor(self, sourceExtract, titleOfBook, bookType, pageNumber, numPages) :
             describeExtractPrompt = f"""
                                     , The book is {titleOfBook}, A {bookType}. This is an extract starting from page 
-                                    {pageNumber} out of {bookLength}
+                                    {pageNumber} out of {numPages}
 
                                     Create me a brief description of what this source is supposed to be. 
                                     Keep the language as simple as the given examples, you should also ALWAYS start with 
@@ -143,7 +145,7 @@ class Paper1 :
                                     This text is from the opening of a novelle.
                                     This text is from the opening of a short story.) """
             gptAgent = OpenAI() 
-            description = gptAgent.open_ai_gpt_call(sourceExtract, describeExtractPrompt)
+            description = gptAgent.open_ai_gpt4_call(sourceExtract, describeExtractPrompt)
             return description
         def final_model(self, sourceExtract, titleOfBook, bookType, pageNumber, bookLength) : 
             description = self.descriptor(sourceExtract,titleOfBook,bookType, pageNumber, bookLength)
@@ -160,7 +162,7 @@ class Paper1 :
     class Question4 : 
         def focus_question(self, sourceExtract) : 
             question4PromptGPT4 = """
-                                . Pretend you are a expert examination question creator. Now with this extract in mind, 
+                                . Pretend you are a expert examination question creator, tasked with creating a single exam question. Now with this extract in mind, 
                                 Based on these three exam style questions, I want you to create a new once based on the extract I give you. 
                                 Here are the example questions, remember, each 'EXAMPLE' is supposed to be ONE question, and you should only output ONE question: 
                                 {EXAMPLE ONE} :  Focus this part of your answer on the second part of the source, from line 25 to
@@ -310,7 +312,7 @@ def aqa_english_language_paper_1_generator(self, pdfFile, ques1Choice, titleOfBo
     question5 = paper1.Question5.final_model() # Creates question 5
     return question1, question2, question3, question4, question5
 
-
+######################       TESTING CODE          #################
 
 path = "C:\\Users\\david\\Desktop\\Edukai\\AI models\\Info extractor\\HoI_IV_Strategy_Guide.pdf"
 listPrompt = "list all of the facts in this piece of text. Make sure to include ALL raw information, and nothing more."
@@ -321,25 +323,34 @@ paper1 = Paper1()
 
 
 sourceExtractorInstance = paper1.SourceExtractor()
-sourceExtract = sourceExtractorInstance.source_extraction(path)
+sourceExtractWithNum = sourceExtractorInstance.source_extraction(path)
+sourceExtract = sourceExtractWithNum[0]
+pageNumber = sourceExtractWithNum[1]
+numPages = sourceExtractWithNum[2]
+bookTitle = "Hearts Of Iron 4 Guide"
+typeBook = "textbook"
+
 
 
 print(sourceExtract)
-startAndEnd = sourceExtractorInstance.start_and_end_lines(sourceExtract)
-print(startAndEnd[0], startAndEnd[1])
-
-question1Maker = Paper1.Question1()
-question1 = question1Maker.final_model(sourceExtract, choice)
-print(question1)
-
-paper1InstanceQues2 = paper1.Question2()
-ques2Contract = paper1InstanceQues2.combined_model(sourceExtract)
-print(ques2Contract)
 
 
+question3Maker = Paper1.Question3()
 
-question4 =  Paper1.Question4().focus_question(sourceExtract)
-print(question4)
+question3 = question3Maker.final_model(sourceExtract, bookTitle, typeBook, pageNumber, numPages )
+print(question3)
+# question1Maker = Paper1.Question1()
+# question1 = question1Maker.final_model(sourceExtract, choice)
+# print(question1)
 
-question5 = Paper1.Question5().final_model()
-print(question5[0], question5[1], question5[2])
+# paper1InstanceQues2 = paper1.Question2()
+# ques2Contract = paper1InstanceQues2.combined_model(sourceExtract)
+# print(ques2Contract)
+
+
+
+# question4 =  Paper1.Question4().focus_question(sourceExtract)
+# print(question4)
+
+# question5 = Paper1.Question5().final_model()
+# print(question5[0], question5[1], question5[2])
