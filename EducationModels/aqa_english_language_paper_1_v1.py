@@ -158,12 +158,12 @@ class Paper1 :
                             """ 
             return questionString
     class Question4 : 
-        def focus_question(self, extract) : 
-            question4PromptGPT4 = f"""
-                                . Now with this extract in mind, 
+        def focus_question(self, sourceExtract) : 
+            question4PromptGPT4 = """
+                                . Pretend you are a expert examination question creator. Now with this extract in mind, 
                                 Based on these three exam style questions, I want you to create a new once based on the extract I give you. 
-                                Here are the example questions: 
-                                ( Focus this part of your answer on the second part of the source, from line 25 to
+                                Here are the example questions, remember, each 'EXAMPLE' is supposed to be ONE question, and you should only output ONE question: 
+                                {EXAMPLE ONE} :  Focus this part of your answer on the second part of the source, from line 25 to
                                 the end.
                                 A student said, ‘This part of the story, where Mr Fisher is marking homework,
                                 shows Tibbet’s story is better than Mr Fisher expected, and his reaction is
@@ -173,9 +173,9 @@ class Paper1 :
                                 • consider your own impressions of what Mr Fisher expected Tibbet’s
                                 homework to be like
                                 • evaluate how the writer conveys Mr Fisher’s reaction to what he discovers
-                                • support your response with references to the text.
+                                • support your response with references to the text. 
 
-                                Focus this part of your answer on the second part of the source, from line 24 to the
+                                {EXAMPLE 2} : Focus this part of your answer on the second part of the source, from line 24 to the
                                 end.
                                 A student said, ‘I wasn’t at all surprised by the disappearance of the stranger child
                                 at the end of the extract. The writer has left us in no doubt that she is just part of
@@ -186,7 +186,7 @@ class Paper1 :
                                 • evaluate how the writer presents the stranger child
                                 • support your response with references to the text.
 
-                                Focus this part of your answer on the second part of the source, from line 20 to the
+                                {EXAMPLE 3} : Focus this part of your answer on the second part of the source, from line 20 to the
                                 end.
                                 A student said, ‘From the moment he arrives at Master’s compound, the writer
                                 portrays Ugwu’s feelings of pure excitement, but by the end it seems that he may
@@ -202,7 +202,7 @@ class Paper1 :
                                 
                                 """
             gptAgent = OpenAI()
-            question4 = gptAgent.open_ai_gpt4_call(extract, question4PromptGPT4)
+            question4 = gptAgent.open_ai_gpt4_call(sourceExtract, question4PromptGPT4)
             return question4
     class Question5: 
         def __init__(self):
@@ -238,7 +238,7 @@ class Paper1 :
                                     Your local bookstore is running a creative writing competition. The best entries will be displayed in the store.
 
                                     """ 
-            introduction = self.gptAgent.open_ai_gpt_call(prompt=introductionPrompt)
+            introduction = self.gptAgent.open_ai_gpt_call(introductionPrompt)
             return introduction
         
         def describe(self): 
@@ -262,8 +262,8 @@ class Paper1 :
                                 Write a description of a majestic castle as suggested by this picture:
                                 Keep the prompts varied, involving different scenes, characters, and situations. ONLY output the prompt.
                                 """ 
-            describe = self.gptAgent.open_ai_gpt_call(prompt=describePrompt)
-            describeImage = self.gptAgent.open_ai_dalle_call_n1(inputPrompt=describe)
+            describe = self.gptAgent.open_ai_gpt4_call(describePrompt)
+            describeImage = self.gptAgent.open_ai_dalle_call_n1(describe)
             return describe, describeImage  
         
         def write_a_whatever(self): 
@@ -291,7 +291,7 @@ class Paper1 :
 
                                         Write a story about a magical book.
                                     """ 
-            writeAWhatever = self.gptAgent.open_ai_gpt_call(prompt=writeAWhateverPrompt)
+            writeAWhatever = self.gptAgent.open_ai_gpt4_call(writeAWhateverPrompt)
             return writeAWhatever
 
         def final_model(self) : 
@@ -328,9 +328,18 @@ print(sourceExtract)
 startAndEnd = sourceExtractorInstance.start_and_end_lines(sourceExtract)
 print(startAndEnd[0], startAndEnd[1])
 
+question1Maker = Paper1.Question1()
+question1 = question1Maker.final_model(sourceExtract, choice)
+print(question1)
+
 paper1InstanceQues2 = paper1.Question2()
 ques2Contract = paper1InstanceQues2.combined_model(sourceExtract)
 print(ques2Contract)
 
-# question1 = paper1.Question1.final_model(path, choice) 
-# print(question1)
+
+
+question4 =  Paper1.Question4().focus_question(sourceExtract)
+print(question4)
+
+question5 = Paper1.Question5().final_model()
+print(question5[0], question5[1], question5[2])
