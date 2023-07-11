@@ -20,10 +20,9 @@ class Paper1 :
                     sourceTextRaw = sourceTextRaw + page_obj.extract_text()
             
             sourceTextRaw  = sourceTextRaw.replace("\n", " ") # Takes away any line breaks
-            print(sourceTextRaw)
+            
             gptAgent = OpenAI()  # Creating an instance of OpenAI
             sourceTextNoSpaces = gptAgent.open_ai_gpt_call(user_content=sourceTextRaw, prompt=contentGrammerFixerPrompt)  # Call the method on the instance
-            print(sourceTextNoSpaces)
             return sourceTextNoSpaces, pageNumber, numpages
 
         def start_and_end_lines(self, content) : 
@@ -48,7 +47,6 @@ class Paper1 :
 
             beginningAndEndingLines  = beginningAndEndingLines.replace("\n", " ") # Takes away any line breaks
             beginningAndEndingLines = re.findall(regexExpression, beginningAndEndingLines) #Seperates the result into two strings. [0] = start, [1] = last.
-            print(beginningAndEndingLines)
             return beginningAndEndingLines
 
         def extract_subsection(self, text, start_sentence, end_sentence):
@@ -70,9 +68,7 @@ class Paper1 :
             content = self.get_pdf_content(pdf_file)
             
             startAndEndLines = self.start_and_end_lines(content[0])
-            print('Start sentence:', startAndEndLines[0])
-            print('End sentence:', startAndEndLines[1])
-            print('Content:', content[0])
+
             sourceExtract = self.extract_subsection(content[0], startAndEndLines[0], startAndEndLines[1])
             
             return sourceExtract, content[1], content[2]
@@ -337,20 +333,20 @@ print(sourceExtract)
 
 question3Maker = Paper1.Question3()
 
+
+question1Maker = Paper1.Question1()
+question1 = question1Maker.final_model(sourceExtract, choice)
+print(question1)
+
+paper1InstanceQues2 = paper1.Question2()
+ques2Contract = paper1InstanceQues2.combined_model(sourceExtract)
+print(ques2Contract)
+
 question3 = question3Maker.final_model(sourceExtract, bookTitle, typeBook, pageNumber, numPages )
 print(question3)
-# question1Maker = Paper1.Question1()
-# question1 = question1Maker.final_model(sourceExtract, choice)
-# print(question1)
 
-# paper1InstanceQues2 = paper1.Question2()
-# ques2Contract = paper1InstanceQues2.combined_model(sourceExtract)
-# print(ques2Contract)
+question4 =  Paper1.Question4().focus_question(sourceExtract)
+print(question4)
 
-
-
-# question4 =  Paper1.Question4().focus_question(sourceExtract)
-# print(question4)
-
-# question5 = Paper1.Question5().final_model()
-# print(question5[0], question5[1], question5[2])
+question5 = Paper1.Question5().final_model()
+print(question5[0], question5[1], question5[2])
