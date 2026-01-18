@@ -3,11 +3,13 @@ import os
 import openai
 import re
 
+
 class AiOfficalModels :
     class OpenAI : 
-        def open_ai_gpt_call(user_content, prompt=None): 
-                openai.api_key = os.getenv('OPENAI_API_KEY')
-                
+        def __init__(self):
+            openai.api_key = os.getenv('OPENAI_API_KEY') 
+       
+        def open_ai_gpt_call(self, user_content, prompt=None): 
                 messages = [{"role": "user", "content": user_content}]
                 if prompt:
                     messages.insert(0, {"role":"system", "content": prompt})
@@ -21,9 +23,10 @@ class AiOfficalModels :
 
                 return reply_content  # Returning the reply_content from the function7
         
+    
 class GeneralAiModels : 
     class SmartGPTV1 : 
-        chain_of_thought_prompt = " Answer : Let’s work this out in a step by step way to be sure we have the right answer"
+        chain_of_thought_prompt = " Answer : Let’s work this out in a step by step way to be 100 percent sure we have the right answer"
         reflexion_prompt = "You are a researcher tasked with investigating the the 3 response options provided. List the flaws and faulty logic of each answer option. Let's work this out in a step by step way to be sure we have all the errors: "
         dera_prompt = " You are a resolver tasked with 1) finding which of the X answer options the researcher thought was best 2) improving that answer and 4) Printing the improved answer in full. Let's work this out in a step by step way to be sure we have the right answer: "
         
@@ -47,9 +50,10 @@ class GeneralAiModels :
         def smart_gpt(self): 
             return self.gptAgent.dera_process()
     class InfoExtractorV1 : 
-        path = "C:\\Users\\david\\Desktop\\Edukai\\AI models\\Info extractor\\meetingminutes.pdf"
-        listPrompt = "list all of the facts in this piece of text. Make sure to include ALL raw information, and nothing more."
-        gptAgent = AiOfficalModels.OpenAI
+        
+        def __init__(self):
+           self.gptAgent = AiOfficalModels.OpenAI()
+           
         def chunker(self, path) :
             pdfFileObj = open(path, 'rb')
             pdfReader = PyPDF2.PdfReader(pdfFileObj)  # Use PdfReader instead of PdfFileReader
@@ -81,22 +85,23 @@ class GeneralAiModels :
         # Reads a pdf, inputs them into chunks into GPT-3.5, then returns the raw facts from the file. 
         def info_extractor(self, input_prompt, textbook_path): 
             rawFacts = []
-            textbookChuncked = self.chunker(textbookPath)    
+            textbookChuncked = self.chunker(textbook_path)    
             for i in range(len(textbookChuncked)) : 
                 rawFacts.append(self.gptAgent.open_ai_gpt_call(textbookChuncked[i]))  # Changed here
 
             return rawFacts
     class SentenceIdentifier : 
-        alphabets= "([A-Za-z])"
-        prefixes = "(Mr|St|Mrs|Ms|Dr)[.]"
-        suffixes = "(Inc|Ltd|Jr|Sr|Co)"
-        starters = "(Mr|Mrs|Ms|Dr|Prof|Capt|Cpt|Lt|He\s|She\s|It\s|They\s|Their\s|Our\s|We\s|But\s|However\s|That\s|This\s|Wherever)"
-        acronyms = "([A-Z][.][A-Z][.](?:[A-Z][.])?)"
-        websites = "[.](com|net|org|io|gov|edu|me)"
-        digits = "([0-9])"
-        multiple_dots = r'\.{2,}'
+       
+        def split_into_sentences(self, text: str) -> list[str]:
+            alphabets= "([A-Za-z])"
+            prefixes = "(Mr|St|Mrs|Ms|Dr)[.]"
+            suffixes = "(Inc|Ltd|Jr|Sr|Co)"
+            starters = "(Mr|Mrs|Ms|Dr|Prof|Capt|Cpt|Lt|He\s|She\s|It\s|They\s|Their\s|Our\s|We\s|But\s|However\s|That\s|This\s|Wherever)"
+            acronyms = "([A-Z][.][A-Z][.](?:[A-Z][.])?)"
+            websites = "[.](com|net|org|io|gov|edu|me)"
+            digits = "([0-9])"
+            multiple_dots = r'\.{2,}'
 
-        def split_into_sentences(text: str) -> list[str]:
             """
             Split the text into sentences.
 
@@ -136,22 +141,36 @@ class GeneralAiModels :
             if sentences and not sentences[-1]: sentences = sentences[:-1]
             return sentences
 
+path = "C:\\Users\\david\\Desktop\\Edukai\\AI models\\Info extractor\\meetingminutes.pdf"
+listPrompt = "list all of the facts in this piece of text. Make sure to include ALL raw information, and nothing more."
+questionPrompt = "Write a me a tailored question for the following raw fact for a flashcard."
+# infoExtractorTest = GeneralAiModels().InfoExtractorV1().info_extractor(listPrompt, path)
 
+# print(infoExtractorTest)
 
 class FlashcardModels : 
     class FlashcardModelV1 : 
-        def flashcard_intialise() :
-            gptAgent = AiOfficalModels.OpenAI
-            InfoExtraction = GeneralAiModels.InfoExtractorV1.info_extractor() #creates the raw information
-            SentenceIdentifier = GeneralAiModels.SentenceIdentifier() #creates the object to be able to split this information
+        def __init__(self):
+            self.gptAgent = AiOfficalModels.OpenAI()
+            self.InfoExtraction = GeneralAiModels.InfoExtractorV1()
+            self.SentenceIdentifier = GeneralAiModels.SentenceIdentifier()
 
-            questionPrompt = "Write a me a tailored question for the following raw fact for a flashcard."
-            answerArray = [SentenceIdentifier.split_into_sentences(InfoExtraction)] #splits it into sentences and returns an array where i = sentence
+        def flashcard_intialise(self, infoExtractPrompt, questionPrompt, textbook_path):
+            rawInfo = self.InfoExtraction.info_extractor(infoExtractPrompt, textbook_path) #creates the raw information
+            answerArray = [sentence for chunk in rawInfo for sentence in self.SentenceIdentifier.split_into_sentences(chunk)]  # <-- change this line
             questionsArray = []
-            
 
-            for i in range(len(answerArray)) :
-                questionsArray.append(gptAgent.open_ai_gpt_call(answerArray[i], questionPrompt))   
+            for answer in answerArray:
+                questionsArray.append(self.gptAgent.open_ai_gpt_call(answer, questionPrompt))   
             return questionsArray, answerArray
+
+flashcardTest = FlashcardModels.FlashcardModelV1()
+questionsArray, answerArray = flashcardTest.flashcard_intialise(listPrompt, questionPrompt, path)
+
+for i in range(len(questionsArray)):
+    print(f"Q{i+1}: {questionsArray[i]}\nA{i+1}: {answerArray[i]}\n")
+
+
+
 
             
